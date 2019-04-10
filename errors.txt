@@ -765,4 +765,4 @@ typedef enum {
       
 [116] device/yu/lettuce/camera/QCamera2/Android.mk: error: camera.msm8916 (SHARED_LIBRARIES android-arm) missing           libqdMetaData (SHARED_LIBRARIES android-arm)
 
-      * clone media-caf and media hals from other rom :)  
+      * clone media-caf and media hals from other rom :) // clone msm8916 caf branch
