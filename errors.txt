@@ -1,0 +1,764 @@
+Some problems that can occur while rom compilation and their solutions(especially for lettuce)
+-------------------------------------------------------------------------------------------------
+[1] No rule to make target "SHARED_LIBRARIES/libaudiopolicymanager_intermediates/export_includes"
+    * insert USE_CUSTOM_AUDIO_POLICY := 0 in device/cyanogen/msm8916-common/board/qcom-audio.mk file.
+    OR
+    * git clone -b cm-13.0-caf-8916 https://github.com/LineageOS/android_hardware_qcom_audio.git hardware/qcom/audio-caf/msm8916
+    * git clone -b cm-14.1-caf-8916 https://github.com/LineageOS/android_hardware_qcom_audio.git hardware/qcom/audio-caf/msm8916
+    FOR OMNIROM-6
+    * Remove hardware/qcom/audio and hardware/qcom/audio-caf/msm8916
+    * git clone -b cm-13.0-caf-8916 https://github.com/LineageOS/android_hardware_qcom_audio.git hardware/qcom/audio
+    * Remove all lines from hardware/qcom/audio/Android.mk and insert the following line.
+      include $(call all-subdir-makefiles)
+
+[2] No rule to make target "SHARED_LIBRARIES/libcryptfs_hw_intermediates/export_includes"
+    * insert TARGET_HW_DISK_ENCRYPTION := false in device/cyanogen/msm8916-common/board/qcom-crypto.mk
+    OR
+    * Comment/delete the following line  common_shared_libraries += libcryptfs_hw   from system/vold/Android.mk
+    * Check for this line  TARGET_CRYPTFS_HW_PATH ?=  in system/vold/Android.mk
+      If the above line isn't present then add this line
+      TARGET_CRYPTFS_HW_PATH ?= device/qcom/common/cryptfs_hw  to system/vold/Android.mk:113 for ref  https://github.com/CyanogenMod/android_system_vold/raw/cm-14.1/Android.mk
+    * Clone cryptfs_hw folder to device/qcom/common
+      git clone -b cm-13.0 https://github.com/LineageOS/android_vendor_qcom_opensource_cryptfs_hw.git device/qcom/common/cryptfs_hw
+      git clone -b cm-14.1 https://github.com/LineageOS/android_vendor_qcom_opensource_cryptfs_hw.git device/qcom/common/cryptfs_hw
+    ========================================================================================
+     IN CASE OF OMNIROM-6, MODIFYING system/vold/Android.mk file gives following errors, so leave the file as it is.
+     PLACE cryptfs_hw directory in device/qcom/common or use the android_device_qcom_common repo provided by OMNIROM.
+     git clone -b android-6.0 https://github.com/omnirom/android_device_qcom_common.git device/qcom/common
+     system/vold/cryptfs.c:1251:ERROR undefined reference to 'is_hw_disk_encryption'
+     system/vold/cryptfs.c:3573:ERROR undefined reference to 'update_hw_device_encryption_key'
+    =========================================================================================
+
+[3] No rule to make target "SHARED_LIBRARIES/libqmiservices_intermediates/export_includes"
+    * See solution for PROBLEM 16
+    OR
+    * insert TARGET_USES_QCOM_WCNSS_QMI := false in device/yu/lettuce/BoardConfig.mk
+      or modify device/cyanogen/msm8916-common/board/qcom-wlan.mk file.
+
+[4] No rule to make target "zImage"
+    * insert TARGET_USES_UNCOMPRESSED_KERNEL := true
+      and BOARD_KERNEL_IMAGE_NAME := Image
+
+    No rule to make target 'kernel/cyanogen/msm8916/arch/arm64/configs/cyanogenmod_lettuce-64_defconfig'
+    * Find out the defconfig file for lettuce at kernel/cyanogen/msm8916/arch/arm64/configs
+    * If it's lineageos_lettuce_defconfig then insert this line in device/yu/lettuce/board/kernel.mk   TARGET_KERNEL_CONFIG := lineageos_lettuce_defconfig
+
+[5] "phone-hdpi-2048-dalvik-heap.mk" not found
+    * wget -qO frameworks/native/build/phone-hdpi-2048-dalvik-heap.mk https://github.com/YUTeleventures/frameworks_native/raw/yu-mm-6.0.1/build/phone-hdpi-2048-dalvik-heap.mk
+
+    workspace/firehound-6.0.1/out/target/common/obj/APPS/Gello_intermediates/org.cyanogenmod.gello-40.apk' failed
+    * Remove this file  vendor/fh/gello/Android.mk
+
+[6] "phone-xxhdpi-2048-hwui-memory.mk" not found
+    FOR cm-14.1
+    * wget -qO frameworks/native/build/phone-xxhdpi-2048-hwui-memory.mk https://github.com/LineageOS/android_frameworks_native/raw/cm-14.1/build/phone-xxhdpi-2048-hwui-memory.mk
+    * wget -qO frameworks/native/build/phone-xxhdpi-2048-dalvik-heap.mk https://github.com/LineageOS/android_frameworks_native/raw/cm-14.1/build/phone-xxhdpi-2048-dalvik-heap.mk
+    FOR cm-13.0
+    * wget -qO frameworks/native/build/phone-xxhdpi-2048-hwui-memory.mk https://github.com/LineageOS/android_frameworks_native/raw/cm-13.0/build/phone-xxhdpi-2048-hwui-memory.mk
+    * wget -qO frameworks/native/build/phone-xxhdpi-2048-dalvik-heap.mk https://github.com/LineageOS/android_frameworks_native/raw/cm-13.0/build/phone-xxhdpi-2048-dalvik-heap.mk
+
+[7] device/cyanogen/msm8916-common/recovery/recovery_updater.c:210:9: error: implicit declaration of function 'uiPrintf'
+    * comment all the occurences of "uiPrintf()"
+
+    frameworks/av/media/libmediaplayerservice/MediaPlayerService.cpp:240:13: error: no matching function for call to 'utf16_to_utf8'
+    system/core/libutils/String8.cpp:117:31: error: too few arguments to function 'void utf16_to_utf8(const char16_t*, size_t, char*, size_t)'
+    * Cherry-pick this commit https://github.com/LineageOS/android_system_core/commit/3c28cda5d0120eb7bf7a49b36b96f45c0a588232
+
+[8] implicit declaration of "strcmp()" or "strerror()"
+    * insert #include <string.h>
+
+    bootable/recovery/minzip/Zip.c:516:5: error: implicit declaration of function 'xz_crc64_init' is invalid in C99
+    * git clone -b cm-13.0 https://github.com/LineageOS/android_external_lzma.git external/lzma
+
+[9] Unknown type "proc_dirty_ratio"
+    * insert   allow vold { proc_sysrq proc_dirty_ratio }:file rw_file_perms;  OR  allow vold proc_dirty_ratio:file rw_file_perms;
+      in external/sepolicy/vold.te  https://github.com/LineageOS/android_external_sepolicy/raw/cm-13.0/vold.te
+    * insert   genfscon proc /sys/vm/dirty_ratio  u:object_r:proc_dirty_ratio:s0
+      in external/sepolicy/genfs_contexts  https://github.com/LineageOS/android_external_sepolicy/raw/cm-13.0/genfs_contexts
+    * insert   type proc_dirty_ratio, fs_type;
+      in external/sepolicy/file.te  https://github.com/LineageOS/android_external_sepolicy/raw/cm-13.0/file.te
+
+[10] device/qcom/sepolicy/common/audioserver.te:63:ERROR 'attribute qti_debugfs_domain is not declared'
+    * insert the following into system/sepolicy/attributes
+# Domain type used for debugfs access by QCOM
+attribute qti_debugfs_domain;
+
+     device/qcom/sepolicy/test/qti-testscripts.te:28:ERROR 'unknown type qti-testscripts'
+    * wget -qO system/sepolicy/qti-testscripts.te https://github.com/LineageOS/android_system_sepolicy/raw/cm-14.1/qti-testscripts.te
+
+[11] make: *** [/home/sachin727/workspace/orion/out/target/product/lettuce/obj/KERNEL_OBJ/.headers_install_stamp] Error 2
+     kernel/cyanogen/msm8916/Makefile:795: *** multiple target patterns.  Stop.
+    * add following lines in BoardConfig.mk
+    KERNEL_TOOLCHAIN := $(ANDROID_BUILD_TOP)/prebuilts/gcc/$(HOST_OS)-x86/aarch64/aarch64-linux-android-4.9/bin
+    KERNEL_TOOLCHAIN_PREFIX := aarch64-linux-android-
+    OR
+    TARGET_KERNEL_CROSS_COMPILE_PREFIX := $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9-kernel/bin/aarch64-linux-android-
+    *  wget -qO build/core/tasks/kernel.mk https://github.com/AOSIP/platform_build/raw/n-mr1/core/tasks/kernel.mk
+    * use prebuilt kernel and replace vendor/<rom>/build/tasks/kernel.mk or build/core/tasks/kernel.mk with this one
+      wget -qO build/core/tasks/kernel.mk https://github.com/Unlegacy-Android/android_vendor_unlegacy/raw/aosp-6.0/build/tasks/kernel.mk
+    OR
+    * insert TARGET_PREBUILT_KERNEL := device/yu/lettuce/Image
+      remove kernel source files
+      and copy KERNEL_OBJ from successfully generated rom dir.
+
+[12] vendor/zos/sepolicy/file.te:16:ERROR 'duplicate declaration of type/attribute' at token ';' on line 38424:
+     type theme_data_file, file_type, data_file_type;
+    * Check for the declaration on system/sepolicy/file_contexts and vendor/zos/sepolicy/file_contexts. If present on both files then comment/remove following lines.
+      /data/system/theme(/.*)?  u:object_r:theme_data_file:s0  from   vendor/zos/sepolicy/file_contexts
+      type theme_data_file, file_type, data_file_type;         from   vendor/zos/sepolicy/file.te
+
+[13] errors like "appears in overlay but not in the base package; use <add-resource> to add"
+    * comment the respective entries in corresponding .xml files
+    * config_deviceHardwareKeys  device/yu/lettuce/overlay/frameworks/base/core/res/res/values/config.xml
+    * config_deviceHardwareWakeKeys   device/yu/lettuce/overlay/frameworks/base/core/res/res/values/config.xml
+    * config_comboNetworkLocationProvider   device/yu/lettuce/overlay/frameworks/base/core/res/res/values/config.xml
+
+[14] error regarding TWRP. TW_THEME is not valid
+    * insert TW_THEME := portrait_hdpi
+      in device/yu/lettuce/BoardConfig.mk
+
+[15] frameworks/av/media/libstagefright/FFMPEGSoftCodec.cpp:45:10: fatal error: 'OMX_QCOMExtns.h' file not found
+    * git clone -b cm-13.0-caf-8916 https://github.com/CyanogenMod/android_hardware_qcom_media.git hardware/qcom/media-caf/msm8916
+    * git clone -b cm-14.1-caf-8916 https://github.com/CyanogenMod/android_hardware_qcom_media.git hardware/qcom/media-caf/msm8916
+
+[16] obj/STATIC_LIBRARIES/lib_driver_cmd_qcwcn_intermediates/export_includes', needed by '/home/sachinoraon55/workspace/eucos/out/target/product/lettuce/obj/EXECUTABLES/hostapd_intermediates/import_includes', missing and no known rule to make it
+    * git clone -b cm-13.0-caf https://github.com/LineageOS/android_hardware_qcom_wlan.git hardware/qcom/wlan
+    OR
+      git clone -b cm-14.1-caf https://github.com/LineageOS/android_hardware_qcom_wlan.git hardware/qcom/wlan
+      Now delete hardware/qcom/wlan/Android.mk
+    OR
+    * git clone -b mm6.0-caf https://github.com/SlimRoms/hardware_qcom_wlan.git hardware/qcom/wlan-caf
+    * git clone -b m-caf https://github.com/DirtyUnicorns/android_hardware_qcom_wlan.git hardware/qcom/wlan
+
+[17] No rule to make target 'out/target/product/lettuce/kernel', needed by 'out/target/product/lettuce/boot.img'
+    * download kernel.mk and dt_image.mk from cm repo and put them to build/core/tasks/
+    wget -qO build/core/tasks/kernel.mk https://github.com/CyanogenMod/android_build/raw/cm-13.0/core/tasks/kernel.mk
+    wget -qO build/core/tasks/dt_image.mk https://github.com/CyanogenMod/android_build/raw/cm-13.0/core/tasks/dt_image.mk
+
+[18] No rule to make target 'external/ant-wireless/antradio-library/com.dsi.ant.antradio_library.xml'
+    *  git clone -b cm-13.0 https://github.com/LineageOS/android_external_ant-wireless_antradio-library.git external/ant-wireless/antradio-library
+    *  git clone -b cm-14.1 https://github.com/LineageOS/android_external_ant-wireless_antradio-library.git external/ant-wireless/antradio-library
+
+[19] ld.qcld: Unknown command line argument '--fix-cortex-a53-835769'.  Try: 'prebuilts/clang/linux-x86/host/sdclang-3.8/bin/ld.qcld -help'
+    For Zephyr-OS
+    * Use the sdllvm-lto-defs.mk of Zephyr-OS present at vendor/zos/sdclang/sdllvm-lto-defs.mk
+    * Insert following into device/yu/lettuce/BoardConfig.mk
+      SDCLANG_LTO_DEFS := vendor/zos/sdclang/sdllvm-lto-defs.mk
+    * OR insert this into device/yu/lettuce/BoardConfig.mk
+      include vendor/zos/sdclang/sdclang.mk
+
+    /real-ld: unrecognized option '--fix-cortex-a53-843419'
+    * Remove this line from build/core/combo/TARGET_linux-arm64.mk
+      -Wl,--fix-cortex-a53-843419 \
+===============================================
+    Enable linker -fix-cortex-a53-843419
+https://github.com/BlissRoms/platform_build/commit/54b22a5a706f6556cda6ef3de13b9b0bdc22e989
+===============================================
+
+[20] BUILD_FINGERPRINT cannot contain spaces
+    * insert  PRODUCT_BRAND := YU
+      in device/yu/lettuce/<rom>.mk then delete PRODUCT_BRAND := YU from device/yu/lettuce/full_lettuce.mk
+
+[21] No rule to make obj/SHARED_LIBRARIES/libqdutils_intermediates/export_includes
+     No rule to make /obj/SHARED_LIBRARIES/libqdMetaData_intermediates/
+     No rule to make /obj_arm/SHARED_LIBRARIES/libqservice_intermediates/
+    * git clone -b cm-13.0-caf-8916 https://github.com/CyanogenMod/android_hardware_qcom_media.git hardware/qcom/display-caf/msm8916
+      git clone -b cm-14.1-caf-8916 https://github.com/LineageOS/android_hardware_qcom_media.git hardware/qcom/display-caf/msm8916
+    OR
+    * copy libqdutils.so, libqdMetaData.so and libqservice.so files from /system/lib and /system/lib64 and paste it to vendor/yu/lettuce/proprietary/lib and lib64
+    * add the following lines to vendor/yu/lettuce/Android.mk file
+include $(CLEAR_VARS)
+LOCAL_MODULE := libqdutils
+LOCAL_MODULE_OWNER := yu
+LOCAL_SRC_FILES_64 := proprietary/lib64/libqdutils.so
+LOCAL_SRC_FILES_32 := proprietary/lib/libqdutils.so
+LOCAL_MULTILIB := both
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE_CLASS := SHARED_LIBRARIES
+LOCAL_MODULE_SUFFIX := .so
+include $(BUILD_PREBUILT)
+    * Similarly do for libqdMetaData.so and libqservice.so
+
+[22] frameworks/av/media/libeffects/lvm/wrapper/Bundle/EffectBundle.cpp:3137:17: error: use of undeclared identifier 'EFFECT_PARAM_SIZE_MAX'
+     frameworks/av/media/libeffects/lvm/wrapper/Bundle/EffectBundle.cpp:3145:18: error: use of undeclared identifier 'EFFECT_PARAM_SIZE_MAX'
+    * Insert  #define EFFECT_PARAM_SIZE_MAX       65536
+      into frameworks/av/media/libeffects/lvm/wrapper/Bundle/EffectBundle.cpp  For ref : https://github.com/AOSP-CAF/platform_frameworks_av/raw/n-mr1/media/libmedia/IEffect.cpp
+
+[23] packages/apps/Bluetooth/src/com/android/bluetooth/hfp/AtPhonebook.java:143: ERROR: The field 'Calls.OUTGOING_IMS_TYPE' is not visible
+    * Revert this commit https://github.com/AOSP-CAF/platform_packages_apps_Bluetooth/commit/6cf4ec338ba35a7586f906c14965f7d03d9fc4ac
+    OR
+    * wget -qO packages/apps/Bluetooth/src/com/android/bluetooth/hfp/AtPhonebook.java https://github.com/LineageOS/android_packages_apps_Bluetooth/raw/cm-14.1/src/com/android/bluetooth/hfp/AtPhonebook.java
+
+[24] Communication error with jack (52)
+    * use fuckjack script
+      git clone git://github.com/mikecriggs/fuckjack.git fuckjack
+
+[25] fatal error: 'gralloc_priv.h' file not found
+    * clone hardware/qcom/display-caf/msm8916
+
+[26] gcc: error: unrecognized command line option ‘-mlittle-endian’
+     gcc: error: unrecognized command line option ‘-mgeneral-regs-only’
+     * Edit kernel/cyanogen/msm8916/arch/arm64/Makefile  FOR ref : https://github.com/DirtyUnicorns/android_kernel_google_pixel/commit/924dd50bc4ad26612efbc75f7e60492c5faaa868
+ifeq ($(call cc-option-yn,-mgeneral-regs-only),y)
+KBUILD_CFLAGS   += -mgeneral-regs-only
+endif
+
+ifeq ($(call cc-option-yn,-mlittle-endian),y)
+KBUILD_CPPFLAGS += -mlittle-endian
+AS              += -EL
+LD              += -EL
+endif
+
+[27] device/qcom/sepolicy/test/qti-testscripts.te:28:ERROR 'unknown type qti-testscripts'
+    * wget -O system/sepolicy/qti-testscripts.te https://github.com/CyanogenMod/android_system_sepolicy/raw/cm-14.1/qti-testscripts.te
+
+[28] libsepol.report_failure: neverallow on line 574 of system/sepolicy/domain.te (or line 9460 of policy.conf) violated by allow rmt_storage debugfs:file
+     libsepol.report_failure: neverallow on line 574 of system/sepolicy/domain.te (or line 9460 of policy.conf) violated by allow energyawareness debugfs
+     libsepol.report_failure: neverallow on line 574 of system/sepolicy/domain.te (or line 9460 of policy.conf) violated by allow audioserver debugfs
+    * git clone -b cm-14.1 https://github.com/LineageOS/android_system_sepolicy.git system/sepolicy
+
+[29] error: 'MEASUREMENT_COUNT' undeclared
+    * insert   #define MEASUREMENT_COUNT 2    in    system/media/audio_effects/include/audio_effects/effect_visualizer.h
+
+[30] errors like build/core/product_config.mk:245: *** Can not locate config makefile for product "emotion_lettuce".  Stop.
+    * rename device/yu/lettuce/emotion_lettuce.mk to device/yu/lettuce/emotion.mk
+    * edit device/yu/lettuce/AndroidProducts.mk change PRODUCT_MAKEFILES := device/yu/lettuce/emotion_lettuce.mk to PRODUCT_MAKEFILES := device/yu/lettuce/emotion.mk
+
+[31] vendor/qcom/opensource/cryptfs_hw: MODULE.TARGET.SHARED_LIBRARIES.libcryptfs_hw already defined by device/qcom/common/cryptfs_hw
+    * rm -r device/qcom/common/cryptfs_hw
+      it may cause fatal error: 'cryptfs_hw.h' file not found if vendor/qcom/opensource/cryptfs_hw is removed.
+
+[32] ninja: error: out/target/product/lettuce/system/lib64/libfmjni.so missing and no known rule to make it
+    * git clone -b cm-13.0 https://github.com/LineageOS/android_hardware_qcom_fm.git hardware/qcom/fm
+    * try adding libfmjni.so manually just as Problem 21
+    * OR rm -r packages/apps/FMRadio
+    * OR add BOARD_HAVE_QCOM_FM := true in device/cyanogen/msm8916-common/board/qcom-fm.mk
+
+[33] hardware/ril-caf/libril/rilSocketQueue.h:19:10 fatal error:hardware/ril-caf/librilutils/proto/sap-api.pb.h file not found
+    * edit hardware/ril-caf/libril/rilSocketQueue.h change 
+        #include <hardware/ril/librilutils/proto/sap-api.pb.h> to
+        #include <hardware/ril-caf/librilutils/proto/sap-api.pb.h>
+    * also similarly edit  hardware/ril-caf/libril/RilSapSocket.h
+
+[34] system/vold/cryptfs.c:74:10: fatal error: 'cryptfs_hw.h' file not found
+    * check for [TARGET_CRYPTFS_HW_PATH ?=] in system/vold/Android.mk file. If it's [vendor/qcom/opensource/cryptfs_hw] then check for that folder.
+      If it's unavailable then do   git clone -b cm-14.1 https://github.com/LineageOS/android_vendor_qcom_opensource_cryptfs_hw.git vendor/qcom/opensource/cryptfs_hw
+    * after that remove this  rm -r device/qcom/common/cryptfs_hw
+    * Check for TARGET_CRYPTFS_HW_PATH ?= vendor/qcom/opensource/cryptfs_hw  in system/vold/Android.mk
+
+[35] device/qcom/common/power/power.c:204:14: error: use of undeclared identifier 'POWER_HINT_LAUNCH_BOOST'
+     device/qcom/common/power/power.c:205:14: error: use of undeclared identifier 'POWER_HINT_AUDIO'
+     device/qcom/common/power/power.c:204:14: error: duplicate case value 'POWER_HINT_CPU_BOOST'
+     device/qcom/common/power/power.c:461:20: error: 'POWER_FEATURE_SUPPORTED_PROFILES' undeclared (first use in this function)
+    * Cherry-pick these commits for this error  device/qcom/common/power/power.c:205:14: error: use of undeclared identifier 'POWER_HINT_AUDIO'
+      https://github.com/SlimRoms/device_qcom_common/commit/6d26c76b21d19e696806a093c1fe64a22ff31cc7
+      https://github.com/SlimRoms/hardware_libhardware/commit/d7f58ca0be29b55e801a7800bd042e6eb6090d56
+    OR
+    * Look for their declarations on  https://raw.githubusercontent.com/LineageOS/android_hardware_libhardware/397277cc4ee0764184d3a5eaeea9f3dd26c996ab/include/hardware/power.h
+      wget -qO hardware/libhardware/include/hardware/power.h https://raw.githubusercontent.com/LineageOS/android_hardware_libhardware/397277cc4ee0764184d3a5eaeea9f3dd26c996ab/include/hardware/power.h
+    * In case of OMNIROM-6, use their android_device_qcom_common tree
+      git clone -b android-6.0 https://github.com/omnirom/android_device_qcom_common.git device/qcom/common
+
+[36] Please install ImageMagick
+    * https://gist.github.com/rodleviton/74e22e952bd6e7e5bee1
+      OR apt-get install imagemagick
+
+[37] packages/apps/Bluetooth/jni/com_android_bluetooth_hfp.cpp:398:30: error: unknown type name 'bthf_hf_ind_type_t'
+     packages/apps/Bluetooth/jni/com_android_bluetooth_hfp.cpp:428:5: error: cannot initialize a member subobject of type 'bthf_key_pressed_cmd_callback'
+     packages/apps/Bluetooth/jni/com_android_bluetooth_hfp.cpp:429:5: error: cannot initialize a member subobject of type 'bthf_bind_cmd_callback'
+     packages/apps/Bluetooth/jni/com_android_bluetooth_hfp.cpp:430:5: error: cannot initialize a member subobject of type 'bthf_biev_cmd_callback'
+     packages/apps/Bluetooth/jni/com_android_bluetooth_hfp.cpp:729:65: error: unknown type name 'bthf_hf_ind_type_t'; did you mean 'bthf_bind_type_t'
+     packages/apps/Bluetooth/jni/com_android_bluetooth_hfp.cpp:730:33: error: use of undeclared identifier 'BTHF_HF_IND_ENABLED'
+     packages/apps/Bluetooth/jni/com_android_bluetooth_hfp.cpp:730:55: error: use of undeclared identifier 'BTHF_HF_IND_DISABLED'
+    * git clone -b cm-13.0 https://github.com/LineageOS/android_packages_apps_Bluetooth.git packages/apps/Bluetooth
+    * git clone -b cm-14.1 https://github.com/LineageOS/android_packages_apps_Bluetooth.git packages/apps/Bluetooth
+
+[38] system/bt/btif/src/btif_hf.c:739:44: error: no member named 'bind_cb' in 'bthf_callbacks_t'
+     system/bt/btif/src/btif_hf.c:747:44: error: no member named 'biev_cb' in 'bthf_callbacks_t'
+     system/bt/btif/src/btif_hf.c:747:54: error: use of undeclared identifier 'bthf_hf_ind_type_t'
+     system/bt/btif/src/btif_hf.c:1236:34: error: unknown type name 'bthf_hf_ind_type_t'
+     system/bt/btif/src/btif_hf.c:1248:43: error: use of undeclared identifier 'BTHF_HF_IND_ENABLED'
+    * git clone -b cm-13.0 https://github.com/LineageOS/android_system_bt.git system/bt
+    * git clone -b cm-14.1 https://github.com/LineageOS/android_system_bt.git system/bt
+
+[39] system/keymaster/keymaster_tags.cpp:23:13: error: 9 enumeration values not handled in switch: 'KM_TAG_SOTER_AUTO_SIGNED_COMMON_KEY_WHEN_GET_PUBLIC_KEY', 'KM_TAG_SOTER_AUTO_SIGNED_COMMON_KEY_WHEN_GET_PUBLIC_KEY_BLOB', 'KM_TAG_SOTER_UID'
+     system/keymaster/attestation_record.cpp:224:17: error: 9 enumeration values not handled in switch: 'KM_TAG_SOTER_AUTO_SIGNED_COMMON_KEY_WHEN_GET_PUBLIC_KEY', 'KM_TAG_SOTER_AUTO_SIGNED_COMMON_KEY_WHEN_GET_PUBLIC_KEY_BLOB', 'KM_TAG_SOTER_UID'
+     system/keymaster/keymaster_enforcement.cpp:235:17: error: 9 enumeration values not handled in switch: 'KM_TAG_SOTER_AUTO_SIGNED_COMMON_KEY_WHEN_GET
+    * cherry-pick this commit https://github.com/LineageOS/android_system_keymaster/commit/dc06a0f1f26ff5431d13c544b0603c32d97ba2e9
+    * wget -qO system/keymaster/keymaster_tags.cpp  https://github.com/LineageOS/android_system_keymaster/raw/cm-14.1/keymaster_tags.cpp
+    OR
+    * git clone -b cm-14.1 https://github.com/LineageOS/android_system_keymaster.git system/keymaster
+
+[40] system/keymaster/attestation_record.cpp:224:17: error: 9 enumeration values not handled in switch: 'KM_TAG_SOTER_AUTO_SIGNED_COMMON_KEY_WHEN_GET_PUBLIC_KEY', 'KM_TAG_SOTER_AUTO_SIGNED_COMMON_KEY_WHEN_GET_PUBLIC_KEY_BLOB', 'KM_TAG_SOTER_UID'
+    * wget -qO system/keymaster/attestation_record.cpp https://github.com/LineageOS/android_system_keymaster/raw/cm-14.1/attestation_record.cpp
+    * wget -qO system/keymaster/attestation_record.h https://github.com/LineageOS/android_system_keymaster/raw/cm-14.1/attestation_record.h
+
+##################################################################
+|    FOR PROBLEM 39 AND 40 do this if above solution isn't working
+| git clone -b cm-14.1 https://github.com/LineageOS/android_system_keymaster.git system/keymaster
+| git clone -b cm-14.1 https://github.com/CyanogenMod/android_hardware_libhardware.git hardware/libhardware
+##################################################################
+
+[41] Multiple same specifications for /data/misc/radio(/.*)?
+    * https://github.com/Euphoria-OS/android_device_moto_shamu/commit/374c552d5152da7f800623c4d970e745b3917428
+     Delete the line "/data/misc/radio(/.*)?" from vendor/<rom>/sepolicy/file_contexts OR from device/qcom/sepolicy/common/file_contexts
+
+[42] Files are listed in LOCAL_SRC_FILES_EXCLUDE but not LOCAL_SRC_FILES
+    * comment/delete the following line from build/core/binary.mk:209
+      $(error $(my_missing_exclude_files))
+
+[43] build/core/base_rules.mk:183: *** device/qcom/common/rootdir/etc/: MODULE.TARGET.ETC.init.qcom.bt.sh already defined by device/cyanogen/msm8916-common/rootdir/etc/
+    * Delete device/qcom/common/rootdir/etc/init.qcom.bt.sh
+    * Also delete the following lines from device/qcom/common/rootdir/Android.mk
+include $(CLEAR_VARS)
+LOCAL_MODULE       := init.qcom.bt.sh
+LOCAL_MODULE_TAGS  := optional eng
+LOCAL_MODULE_CLASS := ETC
+LOCAL_SRC_FILES    := etc/init.qcom.bt.sh
+include $(BUILD_PREBUILT)
+    * do above steps for these files also if they are present in both device/qcom/common/rootdir/etc/ and device/cyanogen/msm8916-common/rootdir/etc/
+      init.qcom.rc      init.qcom.usb.rc       ueventd.qcom.rc
+
+[44] errors pointing to bionic/libc/include/ such as ....
+     version script assignment of LIBC to symbol
+     undefined reference to 'memchr'
+     undefined reference to 'memcmp'
+     bionic/__memset_chk.cpp:52: error:
+    * git clone -b cm-14.1 --single-branch https://github.com/LineageOS/android_bionic.git $HOME/trash/los_bionic;cp -rfv $HOME/trash/los_bionic/* bionic/
+
+[45] system/core/healthd/BatteryMonitor.cpp:70:12: error: no member named 'chargerDockAcOnline' in 'android::BatteryProperties'
+     system/core/healthd/BatteryMonitor.cpp:75:12: error: no member named 'dockBatteryStatus' in 'android::BatteryProperties'
+     system/core/healthd/BatteryMonitor.cpp:76:12: error: no member named 'dockBatteryHealth' in 'android::BatteryProperties'
+     system/core/healthd/BatteryMonitor.cpp:274:11: error: no member named 'dockBatterySupported' in 'android::BatteryProperties'
+     system/core/healthd/BatteryMonitor.cpp:189:11: error: 'struct android::BatteryProperties' has no member named 'maxChargingCurrent'
+     system/core/healthd/BatteryMonitor.cpp:416:49: error: 'struct android::BatteryProperties' has no member named 'maxChargingCurrent'
+     * wget -qO frameworks/native/include/batteryservice/BatteryService.h https://github.com/LineageOS/android_frameworks_native/raw/cm-13.0/include/batteryservice/BatteryService.h
+     * wget -qO frameworks/native/include/batteryservice/BatteryService.h https://github.com/LineageOS/android_frameworks_native/raw/cm-14.1/include/batteryservice/BatteryService.h
+     * FOR OMNIROM-6
+       wget -qO frameworks/native-caf/include/batteryservice/BatteryService.h https://github.com/LineageOS/android_frameworks_native/raw/cm-13.0/include/batteryservice/BatteryService.h
+
+[46] Errors due to libcrypto_utils being used instead of libmincrypt
+     system/core/include/mincrypt/rsa.h:48:5: error: conflicting types for 'RSA_verify' present in external/boringssl/src/include/openssl/rsa.h
+     system/core/fs_mgr/fs_mgr_verity.cpp:108: error: undefined reference to 'android_pubkey_decode'
+     halogenOS uses libmincrypt https://github.com/halogenOS/android_system_core/commit/504874a10279a407bd693259b9fcadbb1d873042
+    * git clone -b XOS-7.1 https://github.com/halogenOS/android_system_core.git system/core
+    * git clone -b XOS-7.0 https://github.com/halogenOS/android_external_boringssl.git external/boringssl
+
+[47] /product/lettuce/obj_arm/STATIC_LIBRARIES/libqc-skia_intermediates/libqc-skia.a  needed by /obj_arm/SHARED_LIBRARIES/libskia_intermediates/LINKED/libskia.so missing and no known rule to make it.
+    * Comment/Remove following lines from external/skia/Android.mk
+ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
+    LOCAL_WHOLE_STATIC_LIBRARIES += libqc-skia
+endif
+    * git clone -b cm-14.1 https://github.com/LineageOS/android_external_skia.git external/skia
+    * OR copy libskia.so from device and follow same procedure as problem 21
+
+[48] system/sepolicy/domain.te:447:ERROR 'unknown type camera' at token ';' on line 9333
+    * comment/delete following line from system/sepolicy/domain.te
+    neverallow { domain -appdomain userdebug_or_eng(`-camera -cameraserver -mediaserver')}
+
+[49] frameworks/base/core/jni/AndroidRuntime.cpp:32:24: fatal error: SkGraphics.h: No such file or directory
+    * wget -O frameworks/base/core/jni/SkGraphics.h https://github.com/EuclideanOS/android_external_skia/raw/nougat-mr1/include/core/SkGraphics.h
+      Modify #include <SkGraphics.h>  to  #include "SkGraphics.h"
+
+===================================================================
+|    frameworks/ errors below were due to EuclideanOS sources
+|    therefore I replaced following repos with LineageOS.
+|    git clone -b cm-14.1 https://github.com/LineageOS/android_frameworks_av.git frameworks/av
+|    git clone -b cm-14.1 https://github.com/LineageOS/android_frameworks_native.git frameworks/native
+|    git clone -b cm-14.1 https://github.com/LineageOS/android_system_media.git system/media
+===================================================================  
+[50] frameworks/av/services/audiopolicy/AudioPolicyInterface.h:346:34: error: functions that differ only in their return type cannot be overloaded
+     extern "C" AudioPolicyInterface* createAudioPolicyManager(AudioPolicyClientInterface *clientInterface);
+     frameworks/av/services/audiopolicy/AudioPolicyInterface.h:347:17: error: conflicting types for 'destroyAudioPolicyManager'
+     extern "C" void destroyAudioPolicyManager(AudioPolicyInterface *interface);
+    * insert following lines. For ref  https://github.com/LineageOS/android_frameworks_av/raw/cm-14.1/services/audiopolicy/AudioPolicyInterface.h
+#ifndef USE_LEGACY_AUDIO_POLICY
+extern "C" AudioPolicyInterface* createAudioPolicyManager(AudioPolicyClientInterface *clientInterface);
+extern "C" void destroyAudioPolicyManager(AudioPolicyInterface *interface);
+#endif
+
+[51] frameworks/av/camera/ICameraClient.cpp:53:63: error: use of undeclared identifier 'CAMERA_FRAME_DATA_FD'
+    * Insert following lines in  system/core/include/system/camera.h:341  FOR reference https://github.com/LineageOS/android_system_core/raw/3e7227c99f9aed259d23994787ff56ef3fefa82f/include/system/camera.h
+typedef enum {
+    /** Data buffer */
+    CAMERA_FRAME_DATA_BUF = 0x000,
+    /** File descriptor */
+    CAMERA_FRAME_DATA_FD = 0x100
+} camera_frame_data_type_t;
+
+[52] frameworks/av/media/libmedia/AudioRecord.cpp:29:10: fatal error: 'SeempLog.h' file not found
+    * wget -O frameworks/base/include/SeempLog.h https://github.com/LineageOS/android_frameworks_base/raw/cm-14.1/include/SeempLog.h
+
+[53] frameworks/av/media/libstagefright/SurfaceMediaSource.cpp:115:16: error: no member named 'dumpState' in 'android::IGraphicBufferConsumer'
+    * This occurred due to replacing the repo android_frameworks_av. Therefore replace the file with original one.
+      wget -O frameworks/av/media/libstagefright/SurfaceMediaSource.cpp https://github.com/EuclideanOS/android_frameworks_av/raw/nougat-mr1/media/libstagefright/SurfaceMediaSource.cpp
+
+[54] frameworks/av/media/libstagefright/FFMPEGSoftCodec.cpp   OMX_FFMPEG_Extn.h file not found.
+    * wget -O frameworks/av/media/libstagefright/OMX_FFMPEG_Extn.h https://github.com/LineageOS/android_external_stagefright-plugins/raw/cm-14.1/include/OMX_FFMPEG_Extn.h
+    * wget -O frameworks/av/media/libstagefright/OMX_FFMPEG_Extn.h https://github.com/LineageOS/android_external_stagefright-plugins/raw/cm-13.0/include/OMX_FFMPEG_Extn.h
+
+[55] frameworks/av/services/audioflinger/AudioFlinger.cpp:1937:25: error: use of undeclared identifier AUDIO_OUTPUT_FLAG_DIRECT_PCM
+    *This occurred due to replacing the repo android_frameworks_av. Therefore replace the file with original one.
+     wget -O frameworks/av/services/audioflinger/AudioFlinger.cpp https://github.com/EuclideanOS/android_frameworks_av/raw/nougat-mr1/services/audioflinger/AudioFlinger.cpp
+     OR insert following line in system/media/audio/include/system/audio.h:882 FOR reference https://github.com/LineageOS/android_system_media/raw/0211728b4eeec735f5229e75cd5e838e1dc0109b/audio/include/system/audio.h
+     AUDIO_OUTPUT_FLAG_DIRECT_PCM = 0x2000,
+
+[56] frameworks/av/media/libeffects/factory/EffectsFactory.c:459:20: error: use of undeclared identifier 'AUDIO_EFFECT_VENDOR_CONFIG_FILE2'
+    * This occurred due to replacing the repo android_frameworks_av. Therefore replace the file with original one.
+    wget -O frameworks/av/media/libeffects/factory/EffectsFactory.c https://github.com/EuclideanOS/android_frameworks_av/raw/nougat-mr1/media/libeffects/factory/EffectsFactory.c
+    OR insert following line in system/media/audio_effects/include/audio_effects/audio_effects_conf.h FOR ref https://github.com/LineageOS/android_system_media/raw/cm-14.1/audio_effects/include/audio_effects/audio_effects_conf.h
+    #define AUDIO_EFFECT_VENDOR_CONFIG_FILE2 "/system/etc/audio_effects_vendor.conf"
+
+[57] frameworks/av/media/libmedia/IAudioPolicyService.cpp:807:1: error: allocating an object of abstract class type 'android::BpAudioPolicyService'
+     frameworks/av/media/libmedia/IAudioPolicyServiceClient.cpp:98:1: error: allocating an object of abstract class type 'android::BpAudioPolicyServiceClient'
+    * https://github.com/LineageOS/android_frameworks_av.git
+ 
+[58] system/core/healthd/healthd_mode_android.cpp:60:39: error: allocating an object of abstract class type 'android::BatteryPropertiesRegistrar'
+     frameworks/native/include/batteryservice/IBatteryPropertiesRegistrar.h:41:22: note: unimplemented pure virtual method 'getDockProperty' in
+    * git clone -b cm-14.1 https://github.com/LineageOS/android_system_core.git system/core
+
+[59] system/extras/f2fs_utils/f2fs_utils.c:106: error: undefined reference to 'flush_sparse_buffs'
+     system/extras/f2fs_utils/f2fs_ioutils.c:101:21: error: no member named 'fd' in 'struct f2fs_configuration'
+     external/f2fs-tools/include/f2fs_fs.h:992:13: note: previous declaration is here
+     system/extras/f2fs_utils/f2fs_ioutils.c:154:6: error: conflicting types for 'f2fs_finalize_device'
+     system/extras/f2fs_utils/f2fs_dlutils.c:57:6: error: conflicting types for 'f2fs_init_configuration'
+    * Copy the directory  f2fs_utils  from https://github.com/LineageOS/android_system_extras
+      OR cherry-pick https://github.com/LineageOS/android_system_extras/commit/9c339d72fd3cc86283e66deccf806d8585dceaf3
+    * git clone -b cm-14.1 https://github.com/LineageOS/android_external_f2fs-tools.git external/f2fs-tools
+
+[60] /usr/lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.21' not found
+    * add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    * apt-get update;apt-get install libstdc++6
+
+[61] hardware/qcom/display-caf/msm8916/liblight: MODULE.TARGET.SHARED_LIBRARIES.lights.msm8916 already defined by device/yu/lettuce/liblight.
+    * rm -r  hardware/qcom/display-caf/msm8916/liblight
+
+[62] packages/apps/Bluetooth/jni/com_android_bluetooth_hfp.cpp:398:30: error: unknown type name 'bthf_hf_ind_type_t'; did you mean 'bthf_bind_type_t'?
+     hardware/libhardware/include/hardware/bt_hf.h:74:2: note: 'bthf_bind_type_t' declared here
+    * wget -O packages/apps/Bluetooth/jni/com_android_bluetooth_hfp.cpp  https://github.com/LineageOS/android_packages_apps_Bluetooth/raw/cm-14.1/jni/com_android_bluetooth_hfp.cpp
+
+[63] system/bt/btif/src/btif_hf.c:739:44: error: no member named 'bind_cb' in 'bthf_callbacks_t'
+     system/bt/btif/src/btif_hf.c:747:44: error: no member named 'biev_cb' in 'bthf_callbacks_t'
+     system/bt/btif/src/btif_hf.c:747:54: error: use of undeclared identifier 'bthf_hf_ind_type_t'
+     system/bt/btif/src/btif_hf.c:118:31: error: use of undeclared identifier 'BTA_AG_FEAT_HFIND'
+     system/bt/btif/src/btif_hf.c:118:31: error: use of undeclared identifier 'BTA_AG_FEAT_S4'
+    * git clone -b cm-14.1 https://github.com/LineageOS/android_system_bt.git system/bt
+
+[64] hardware/qcom/media-caf/msm8916/mm-video-v4l2/vidc/vdec/src/omx_vdec_msm8974.cpp:9326:14: error: use of undeclared identifier 'MSM_VIDC_BT709_5'
+     hardware/qcom/media-caf/msm8916/mm-video-v4l2/vidc/vdec/src/omx_vdec_msm8974.cpp:9330:14: error: use of undeclared identifier 'MSM_VIDC_BT470_6_M'
+     hardware/qcom/media-caf/msm8916/mm-video-v4l2/vidc/vdec/src/omx_vdec_msm8974.cpp:9340:14: error: use of undeclared identifier 'MSM_VIDC_GENERIC_FILM'
+     hardware/qcom/media-caf/msm8916/mm-video-v4l2/vidc/vdec/src/omx_vdec_msm8974.cpp:9395:14: error: use of undeclared identifier 'MSM_VIDC_MATRIX_601_6_625'
+    * insert declaration for each identifier as per given here  https://github.com/LineageOS/android_kernel_cyanogen_msm8916/raw/cm-14.1/include/uapi/media/msm_vidc.h
+    OR 
+    * wget -qO kernel/cyanogen/msm8916/include/uapi/media/msm_vidc.h https://github.com/LineageOS/android_kernel_cyanogen_msm8916/raw/cm-14.1/include/uapi/media/msm_vidc.h
+
+[65] hardware/qcom/media-caf/msm8916/mm-video-v4l2/vidc/venc/src/video_encoder_device_v4l2.cpp:3275:18: error: use of undeclared identifier 'V4L2_CID_MPEG_VIDC_VIDEO_FULL_RANGE'
+     hardware/qcom/media-caf/msm8916/mm-video-v4l2/vidc/venc/src/video_encoder_device_v4l2.cpp:3290:18: error: use of undeclared identifier 'V4L2_CID_MPEG_VIDC_VIDEO_TRANSFER_CHARS'
+     hardware/qcom/media-caf/msm8916/mm-video-v4l2/vidc/vdec/src/omx_vdec_msm8974.cpp:9898:38: error: use of undeclared identifier 'V4L2_MPEG_VIDC_EXTRADATA_VUI_DISPLAY'
+     hardware/qcom/media-caf/msm8916/mm-video-v4l2/vidc/vdec/src/omx_vdec_msm8974.cpp:9904:37: error: use of undeclared identifier 'V4L2_MPEG_VIDC_EXTRADATA_VPX_COLORSPACE'
+    * wget -qO kernel/cyanogen/msm8916/include/uapi/linux/v4l2-controls.h https://github.com/LineageOS/android_kernel_cyanogen_msm8916/raw/cm-14.1/include/uapi/linux/v4l2-controls.h
+
+[66] frameworks/av/services/audiopolicy/service/AudioPolicyInterfaceImplLegacy.cpp:611:79: error: unused parameter 'source'
+     frameworks/av/services/audiopolicy/service/AudioPolicyInterfaceImplLegacy.cpp:613:54: error: unused parameter 'handle'
+     frameworks/av/services/audiopolicy/service/AudioPolicyInterfaceImplLegacy.cpp:281:56: error: format specifies type 'int' but the argument has type
+     frameworks/av/services/audiopolicy/service/AudioPolicyInterfaceImplLegacy.cpp:623:49: error: unused parameter 'mono'
+    * make changes to  frameworks/av/services/audiopolicy/service/AudioPolicyInterfaceImplLegacy.cpp
+      as per  https://github.com/LineageOS/android_frameworks_av/commit/37493c60a78aafb3b8864c567325cf5936edb389
+
+[67] frameworks/av/services/audiopolicy/service/AudioPolicyClientImplLegacy.cpp:59:16: error: cannot initialize return object of type 'audio_module_handle_t' with an rvalue of type 'int'
+    * make changes to  frameworks/av/services/audiopolicy/service/AudioPolicyClientImplLegacy.cpp
+      as per  https://github.com/LineageOS/android_frameworks_av/commit/c778d3f6aa027f6435045bfebcb77866c072278a
+
+[68] system/vold/cryptfs.c:3365:106: error: too few arguments to function call, expected 3, have 2
+     int rc = update_hw_device_encryption_key(DEFAULT_PASSWORD, (char*) crypt_ftr.crypto_type_name);
+    * change as given below in device/qcom/common/cryptfs_hw/cryptfs_hw.h
+      int update_hw_device_encryption_key(const char*, const char*);
+
+[69] system/vold/cryptfs.c:1856: error: undefined reference to 'set_hw_device_encryption_key'
+     system/vold/cryptfs.c:3365: error: undefined reference to 'update_hw_device_encryption_key'
+     system/vold/cryptfs.c:3117: error: undefined reference to 'clear_hw_device_encryption_key'
+    * git clone -b cm-14.1 https://github.com/LineageOS/android_system_vold.git system/vold
+    * git clone -b cm-14.1 https://github.com/LineageOS/android_vendor_qcom_opensource_cryptfs_hw.git vendor/qcom/opensource/cryptfs_hw
+
+[70] ninja: error: '/home/sachinoraon55/workspace/eucos/out/target/product/lettuce/obj/SHARED_LIBRARIES/libcrypto_utils_intermediates/export_includes', needed by '/home/sachinoraon55/workspace/eucos/out/target/product/lettuce/obj/EXECUTABLES/vold_intermediates/import_includes', missing and no known rule to make it
+    * copy  libcrypto_utils  folder from  https://github.com/LineageOS/android_system_core  paste it in system/core/
+    * OR git remote add -t cm-14.1 libcrypto https://github.com/LineageOS/android_system_core.git;git fetch libcrypto
+    * git cherry-pick c78415fa50105ffae7a02b6d67b90ff1126e09b3
+
+[71] system/vold/cryptfs.c:2280:24: error: implicit declaration of function 'fs_mgr_is_mdtp_activated' is invalid in C99
+    * cherry-pick https://github.com/LineageOS/android_system_core/commit/8fea6d25b32a826758879b78b9ea43685630bfbc
+    * insert  int fs_mgr_is_mdtp_activated(void);
+      in system/core/fs_mgr/include/fs_mgr.h
+    * insert the method fs_mgr_is_mdtp_activated() in system/core/fs_mgr/fs_mgr.c:490  for ref https://github.com/LineageOS/android_system_core/blob/cm-14.1/fs_mgr/fs_mgr.c
+
+[72] No rule to make target '/home/sachinoraon55/workspace/du/out/target/product/lettuce/obj_arm/STATIC_LIBRARIES/libqc-art-compiler_intermediates/export_includes'
+    * make changes to art/compiler/Android.mk according to  https://github.com/LineageOS/android_art/commit/ebb3a5e26f19355bbaa00d7da9b993a418c915f9
+      for ref https://github.com/LineageOS/android_art/raw/cm-13.0/compiler/Android.mk
+
+[73] No rule to make target '/home/sachinoraon55/workspace/du/out/target/product/lettuce/obj_arm/STATIC_LIBRARIES/libqc-art_intermediates/export_includes'
+    * edit art/runtime/Android.mk
+      change  ifeq ($(BOARD_USES_QCOM_HARDWARE),true)  to   ifeq ($(TARGET_HAVE_QC_PERF),true)
+      OR cherry pick https://github.com/LineageOS/android_art/commit/ead3f39d3e80a90a1863e79822bf5acfae50e9ca
+
+[74] No rule to make target '/home/sachinoraon55/workspace/caf-du/out/target/common/obj/JAVA_LIBRARIES/sap-api-java-static_intermediates/classes.jack
+    * clone the caf branch of android_hardware_ril repo present in rom's repo. For omnirom   git clone -qb android-6.0-caf https://github.com/omnirom/android_hardware_ril.git hardware/ril-caf
+    * OR  git clone -qb cm-13.0-caf https://github.com/CyanogenMod/android_hardware_ril-caf.git hardware/ril-caf
+
+[75] device/yu/lettuce/camera/QCamera2/HAL/QCamera2HWI.cpp:1293:39: error: 'setCameraLaunchStatus' was not declared
+     device/yu/lettuce/camera/QCamera2/HAL/QCamera2HWI.cpp: In member function 'int qcamera::QCamera2HardwareInterface::closeCamera()':
+    * git clone -b cm-13.0-caf-8916 https://github.com/LineageOS/android_hardware_qcom_display.git hardware/qcom/display-caf/msm8916
+
+[76] No rule to make target '/home/sachinoraon55/workspace/omni-mm/out/target/product/lettuce/obj/STATIC_LIBRARIES/libbatteryservice_intermediates/export_includes'
+     No rule to make target '/home/sachinoraon55/workspace/omni-mm/out/target/product/lettuce/obj/STATIC_LIBRARIES/libbinder_intermediates/export_includes
+     No rule to make target '/home/sachinoraon55/workspace/omni-mm/out/target/product/lettuce/obj_arm/SHARED_LIBRARIES/libcamera_client_intermediates/export_includes
+     No rule to make target '/home/sachinoraon55/workspace/omni-mm/out/target/product/lettuce/obj_arm/SHARED_LIBRARIES/libEGL_intermediates/export_includes
+    * OMNIROM-6 requires android_frameworks_native-caf repo also. So clone that repo.
+      git clone -b android-6.0 https://github.com/omnirom/android_frameworks_native-caf.git frameworks/native-caf
+    * OMNIROM-6 requires caf branch of android_frameworks_av repo also. So clone that branch
+      git clone -b android-6.0-caf https://github.com/omnirom/android_frameworks_av.git frameworks/av-caf
+
+[77] frameworks/base/core/jni/android_view_SurfaceControl.cpp:406:22: error: 'const struct android::DisplayInfo' has no member named 'colorTransform'
+    * FOR omnirom-6
+      wget -qO frameworks/native-caf/include/ui/DisplayInfo.h https://github.com/LineageOS/android_frameworks_native/raw/cm-13.0/include/ui/DisplayInfo.h
+
+[78] frameworks/base/core/jni/android_os_Parcel.cpp:125:24: error: 'class android::Parcel' has no member named 'getOpenAshmemSize'
+     frameworks/base/core/jni/android_os_Parcel.cpp:562:24: error: 'class android::Parcel' has no member named 'getOpenAshmemSize'
+    * FOR omnirom-6
+      wget -qO frameworks/native-caf/include/binder/Parcel.h https://github.com/LineageOS/android_frameworks_native/raw/cm-13.0/include/binder/Parcel.h
+
+[79] frameworks/native-caf/libs/binder/Parcel.cpp:926:5: error: 'mBlobAshmemSize' was not declared in this scope
+     frameworks/native-caf/libs/binder/Parcel.cpp: In member function 'void android::Parcel::initState()':
+     frameworks/native-caf/libs/binder/Parcel.cpp:1893:5: error: 'mBlobAshmemSize' was not declared in this scope
+    * FOR omnirom-6
+      wget -qO frameworks/native-caf/libs/binder/Parcel.cpp https://github.com/LineageOS/android_frameworks_native/raw/cm-13.0/libs/binder/Parcel.cpp
+
+[80] frameworks/native-caf/opengl/libs/GLES_trace/src/gltrace_transport.h:22:71: fatal error: frameworks/native/opengl/libs/GLES_trace/proto/gltrace.pb.h: No such file or directory
+      FOR omnirom-6
+    * Modify following files. for x in `find frameworks -type f \( -iname "*.h" -o -iname "*.cpp" -o -iname "*.c" \)`;do y=`cat $x|grep -ic "proto/gltrace.pb.h"`;if [ $y -gt 0 ];then echo $x;fi;done
+      frameworks/native-caf/opengl/libs/GLES_trace/src/gltrace_egl.cpp
+      frameworks/native-caf/opengl/libs/GLES_trace/src/gltrace_api.cpp
+      frameworks/native-caf/opengl/libs/GLES_trace/src/gltrace_fixup.cpp
+      frameworks/native-caf/opengl/libs/GLES_trace/src/gltrace_transport.h
+      frameworks/native-caf/opengl/libs/GLES_trace/src/gltrace_fixup.h
+      Change  #include "frameworks/native/opengl/libs/GLES_trace/proto/gltrace.pb.h"  to  #include "frameworks/native-caf/opengl/libs/GLES_trace/proto/gltrace.pb.h"
+
+[81] omni-mm/system/core/include/utils/Mutex.h:123: undefined reference to `android::SensorManager::sLock'
+    * FOR Omnirom-6
+      wget -qO frameworks/native-caf/include/gui/SensorManager.h https://github.com/LineageOS/android_frameworks_native/raw/cm-13.0/include/gui/SensorManager.h
+      wget -qO frameworks/native-caf/libs/gui/SensorManager.cpp https://github.com/LineageOS/android_frameworks_native/raw/cm-13.0/libs/gui/SensorManager.cpp
+
+[82] frameworks/base/services/core/java/com/android/server/policy/PhoneWindowManager.java:6104: flags cannot be resolved to a variable
+     frameworks/base/services/core/java/com/android/server/policy/PhoneWindowManager.java:6123: isCustomSource cannot be resolved to a variable
+     frameworks/base/services/core/java/com/android/server/policy/PhoneWindowManager.java:6196: The method RepeatCount() is undefined for the type PhoneWindowManager
+    * Revert the commit https://github.com/Zephyr-OS/platform_frameworks_base/commit/ae78d17c0c4cbad265650de0bcd93a36f18a04db
+
+[83] packages/providers/MediaProvider/src/com/android/providers/media/MtpService.java:101: config_enableBoostForMtp cannot be resolved or is not a field
+     packages/providers/MediaProvider/src/com/android/providers/media/MtpService.java:103: mtpboost_param_value cannot be resolved or is not a field
+    * Add following lines in frameworks/base/core/res/res/values/config.xml  FOR ref  https://github.com/AOSP-CAF/platform_frameworks_base/raw/n-mr1/core/res/res/values/config.xml
+    <bool name="config_enableBoostForMtp">false</bool>
+    <integer-array name="mtpboost_param_value" />
+    * Also add following lines in frameworks/base/core/res/res/values/symbols.xml  FOR ref  https://github.com/AOSP-CAF/platform_frameworks_base/raw/n-mr1/core/res/res/values/symbols.xml
+    <java-symbol type="bool" name="config_enableBoostForMtp" />
+    <java-symbol type="array" name="mtpboost_param_value" />
+    OR
+    * Revert the commit https://github.com/AOSP-CAF/platform_packages_providers_MediaProvider/commit/72d67dbde949c6c2bd53543b9796d9368e4e39e7
+
+[84] frameworks/base/obex/javax/obex/ServerSession.java:134:ERROR: undefined method reduceMTU
+     frameworks/base/obex/javax/obex/ServerSession.java:89: setMTU cannot be resolved to a variable
+     packages/apps/Bluetooth/src/com/android/bluetooth/opp/BluetoothOppObexServerSession.java:134: The method reduceMTU(boolean) is undefined for the type ServerSession
+    * cherry-pick this commit https://github.com/AOSP-CAF/platform_frameworks_base/commit/265ed3fdbfdf41db718838244a370f027bef9bbd
+    OR
+    * manually add its definition https://github.com/AOSP-CAF/platform_frameworks_base/raw/n-mr1/obex/javax/obex/ServerSession.java
+
+[85] packages/apps/Settings/src/com/android/settings/fuelgauge/PowerUsageDetail.java:492: power_usage_ab_icon_tint cannot be resolved or is not a field
+    * Add this line in packages/apps/Settings/res/values/projekt_colors.xml  FOR ref  https://github.com/AOSP-CAF/platform_packages_apps_Settings/raw/n-mr1/res/values/projekt_colors.xml
+    <color name="power_usage_ab_icon_tint">@android:color/white</color>
+    OR
+    * Revert the commit https://github.com/Zephyr-OS/platform_packages_apps_Settings/commit/e838ddd80c2f10937102f13146032cbc1717f80e
+
+[86] packages/services/Telecomm/src/com/android/server/telecom/CallLogManager.java:499: The field CallLog.Calls.OUTGOING_IMS_TYPE is not visible
+     packages/services/Telecomm/src/com/android/server/telecom/CallLogManager.java:506: The field CallLog.Calls.MISSED_IMS_TYPE is not visible
+    * Cherry-pick this commit https://github.com/AOSP-CAF/platform_frameworks_base/commit/1983d57b59fa7a4e0377520a6e0663a6fffc61bc
+    OR
+    * Revert the commit https://github.com/Zephyr-OS/platform_packages_services_Telecomm/commit/1d90e29f029b4d3cb4678bf58a3bbf30c4001f0d
+
+[87] packages/services/Telecomm/src/com/android/server/telecom/CallLogManager.java:302: FEATURES_ENRICHED cannot be resolved or is not a field
+    * Revert the commit https://github.com/Zephyr-OS/platform_packages_services_Telecomm/commit/1491ddf7114aae0d429f2424d76e89818fcd34e1
+    * Also revert the commit https://github.com/Zephyr-OS/platform_packages_apps_Dialer/commit/cdd710214cd62ae1539c3828d21623dc2ce2d0e9
+
+[88] packages/apps/Settings/src/com/android/settings/wifi/ManagerPasspointReceiver.java:129: WIFI_HOTSPOT2_REL1_ENABLED cannot be resolved or is not a field
+     packages/apps/Settings/src/com/android/settings/wifi/ConfigureWifiSettings.java:80: WIFI_HOTSPOT2_REL1_ENABLED cannot be resolved or is not a field
+    * Add their definitions on frameworks/base/core/java/android/provider/Settings.java
+      For ref : https://github.com/AOSP-CAF/platform_frameworks_base/blob/n-mr1/core/java/android/provider/Settings.java
+
+[89] packages/apps/Settings/src/com/android/settings/DeviceInfoSettings.java:89: Duplicate field DeviceInfoSettings.QGP_VERSION_PATH
+     packages/apps/Settings/src/com/android/settings/DeviceInfoSettings.java:91: Duplicate field DeviceInfoSettings.QGP_VERSION_PATH
+    * Here multiple assignments of QGP_VERSION_PATH are present in packages/apps/Settings/src/com/android/settings/DeviceInfoSettings.java
+      Therefore comment/delete this     private static final String QGP_VERSION_PATH = "/persist/speccfg/qgpversion";
+
+[90] No rule to make target '/home/sachinoraon55/workspace/f-aosp/out/target/product/lettuce/obj_arm/EXECUTABLES/updater_intermediates/updater'
+    * Remove bootable/recovery and clone this
+      git clone -b cm-13.0 https://github.com/LineageOS/android_bootable_recovery.git bootable/recovery
+      git clone -b cm-14.1 https://github.com/LineageOS/android_bootable_recovery.git bootable/recovery
+
+[91] out/target/product/lettuce/obj/STATIC_LIBRARIES/libminui_intermediates/export_includes', needed by '/home/sachinoraon55/workspace/f-aosp/out/target/product/lettuce/obj/EXECUTABLES/healthd_intermediates/import_includes'
+    * Check for the presence of bootable/recovery/minui. If it's present then Remove this check from bootable/recovery/Android.mk
+      ifeq ($(call my-dir),$(call project-path-for,recovery))
+      . . . .
+      endif
+
+[92] out/target/product/lettuce/obj/STATIC_LIBRARIES/libfuse_static_intermediates/export_includes', needed by '/home/sachinoraon55/workspace/f-aosp/out/target/product/lettuce/obj/EXECUTABLES/fstools_intermediates/import_includes
+     git clone -b cm-13.0 https://github.com/LineageOS/android_external_fuse external/fuse
+
+     out/target/product/lettuce/obj/STATIC_LIBRARIES/libntfs-3g_static_intermediates/export_includes'
+     git clone -b cm-13.0 https://github.com/LineageOS/android_external_ntfs-3g external/ntfs-3g
+
+     out/target/product/lettuce/obj/STATIC_LIBRARIES/libf2fs_static_intermediates/export_includes'
+     git clone -b cm-13.0 https://github.com/LineageOS/android_external_f2fs-tools external/f2fs-tools
+
+     out/target/product/lettuce/obj/STATIC_LIBRARIES/libsgdisk_static_intermediates/export_includes'
+     git clone -b cm-13.0 https://github.com/LineageOS/android_external_gptfdisk external/gptfdisk
+
+     out/target/product/lettuce/obj/STATIC_LIBRARIES/libtar_intermediates/export_includes
+     git clone -b cm-13.0 https://github.com/LineageOS/android_external_libtar external/libtar
+
+     out/target/product/lettuce/obj/STATIC_LIBRARIES/libminivold_static_intermediates/export_includes'
+    * git clone -b cm-13.0 https://github.com/LineageOS/android_system_vold.git system/vold
+      git clone -b cm-13.0 https://github.com/LineageOS/android_vendor_qcom_opensource_cryptfs_hw.git vendor/qcom/opensource/cryptfs_hw
+      rm -r device/qcom/common/cryptfs_hw
+
+     out/target/product/lettuce/obj/STATIC_LIBRARIES/libfsck_msdos_intermediates/export_includes'
+     git clone -b cm-13.0 https://github.com/LineageOS/android_external_fsck_msdos.git external/fsck_msdos
+
+     out/target/product/lettuce/obj/STATIC_LIBRARIES/libminipigz_static_intermediates/export_includes'
+     git clone -b cm-13.0 https://github.com/LineageOS/android_external_pigz.git external/pigz
+
+     out/target/product/lettuce/obj/STATIC_LIBRARIES/libmksh_static_intermediates/export_includes'
+     git clone -b cm-13.0 https://github.com/LineageOS/android_external_mksh.git external/mksh
+
+     out/target/product/lettuce/obj/STATIC_LIBRARIES/libcrypto_utils_static_intermediates/export_includes'
+     git clone -qb cm-14.1 https://github.com/LineageOS/android_system_core.git ~/system_core
+     mv ~/system_core/libcrypto_utils system/core/
+
+     out/target/product/lettuce/obj/SHARED_LIBRARIES/libwpa_qmi_eap_proxy_intermediates/export_includes
+     git clone -qb px-0.2 https://github.com/aopp/android_external_wpa_supplicant_8.git external/wpa_supplicant_8
+     OR
+     comment these lines from external/wpa_supplicant_8/wpa_supplicant/Android.mk
+     ifneq ($(QCPATH),)
+     endif
+
+[93] external/zlib/src/contrib/minizip/ioapi.c:21:45: error: call to 'fseeko' declared with attribute error
+     external/zlib/src/contrib/minizip/ioapi.c:20:29: error: call to 'ftello' declared with attribute error
+     external/zlib/src/contrib/minizip/minizip.c:158:5: error: implicit declaration of function 'fopen64'
+    * git clone -b cm-13.0 https://github.com/LineageOS/android_external_zlib.git external/zlib
+
+[94] system/extras/f2fs_utils/f2fs_sparseblock.c:140:57: error: 'struct f2fs_summary_block' has no member named 'n_sits'
+     system/extras/f2fs_utils/f2fs_sparseblock.c:29:41: error: 'struct f2fs_summary_block' has no member named 'sit_j'
+    * git clone -b cm-13.0 https://github.com/LineageOS/android_system_extras.git system/extras
+
+[95] vendor/yuos/sepolicy/qcom/perfd.te:2:ERROR 'unknown type sysfs_devices_system_iosched' at token ';' on line 27250:
+    * For some reasons the declaration of sysfs_devices_system_iosched was not being fetched from vendor/yuos/sepolicy/file.te
+      So add its declaration in vendor/yuos/sepolicy/qcom/perfd.te and remove the previous declaration from vendor/yuos/sepolicy/file.te
+      Add this line to vendor/yuos/sepolicy/qcom/perfd.te
+      type sysfs_devices_system_iosched, file_type, sysfs_type;
+
+[96] hardware/qcom/display-caf/msm8916/libhwcomposer/hwc_qclient.cpp:375:19: error: 'MDSS_MAX_BW_LIMIT_CAMERA' was not declared in this scope
+    * Add this line to   kernel/cyanogen/msm8916/include/uapi/linux/msm_mdp.h  for REF : https://github.com/LineageOS/android_kernel_cyanogen_msm8916/blob/cm-13.0/include/uapi/linux/msm_mdp.h
+    #define MDSS_MAX_BW_LIMIT_CAMERA    0x2
+    OR
+    * Add that line to   hardware/qcom/display-caf/msm8916/libhwcomposer/hwc_qclient.cpp
+
+[97] error: unsupported reloc 43
+     error: unsupported reloc 42
+    * solution available here  http://stackoverflow.com/questions/36048358/building-android-from-sources-unsupported-reloc-43
+
+[98] packages/providers/ThemesProvider/src/org/cyanogenmod/themes/provider/ThemesOpenHelper.java:35: The import cyanogenmod.providers.ThemesContract.ThemeMixColumns cannot be resolved
+     packages/providers/ThemesProvider/src/org/cyanogenmod/themes/provider/ThemesOpenHelper.java:672: ThemeMixColumns cannot be resolved to a variable
+     packages/providers/ThemesProvider/src/org/cyanogenmod/themes/provider/ThemesOpenHelper.java:682: ThemeMixEntryColumns cannot be resolved to a variable
+    * Fetch the repo https://github.com/CyanogenMod/cm_platform_sdk.git into vendor/cmsdk/sdk/  then
+    * Cherry-pick this commit  https://github.com/CyanogenMod/cm_platform_sdk/commit/c4f27d5b812df3d66c21b4d7ba1d1d216cc0c593
+
+[99] packages/services/Telecomm/src/com/android/server/telecom/Ringer.java:285: Type mismatch: cannot convert from boolean to boolean[]
+    * Cherry-pick this commit  https://github.com/CyanogenMod/android_frameworks_base/commit/62262024cc0c0bade8f48f0582b6fe18ea854f09
+    OR
+    * Cherry-pick this commit  https://github.com/BlissRoms/platform_frameworks_base/commit/40d0d255c6d3df9d26b6d36686a3edb62f3959a5
+
+[100] frameworks/base/services/core/java/com/android/server/notification/ZenModeHelper.java:448: ZEN_PRIORITY_VIBRATION_MODE cannot be resolved or is not a field
+      * Cherry-pick this commit  https://github.com/CyanogenMod/cm_platform_sdk/commit/fac872cfde9c636fb6c26f2807b61030868e58e8
+
+[101] ninja: error: '/android/nitro/out/target/product/lettuce/obj/SHARED_LIBRARIES/libqomx_core_intermediates/export_includes', needed by '/android/nitro/out/target/product/lettuce/obj/SHARED_LIBRARIES/libmmjpeg_interface_intermediates/import_includes', missing and no known rule to make it.
+      * libqomx_core source files are located here device/yu/lettuce/camera/mm-image-codec/qomx_core/   If they're not present then fetch it from https://github.com/LineageOS/android_device_yu_lettuce
+
+[102] out/target/product/lettuce/obj_arm/SHARED_LIBRARIES/libhardware_intermediates/export_includes', needed by '/home/rohan/aosp/out/target/product/lettuce/obj_arm/SHARED_LIBRARIES/libbluetooth_jni_intermediates/import_includes', missing and no known rule to make it.
+      * git clone -qb cm-14.1 https://github.com/LineageOS/android_hardware_libhardware.git hardware/libhardware
+
+[103] frameworks/minikin/libs/minikin/CmapCoverage.cpp:73:57: error: 'android_errorWriteLog' was not declared in this scope
+      frameworks/minikin/libs/minikin/CmapCoverage.cpp:120:53: error: 'android_errorWriteLog' was not declared in this scope
+      * Cherry-pick this commit  https://github.com/LineageOS/android_system_core/commit/75ac84c0bf57d646dfae468916fcdcc071570293
+      OR
+      * Revert this commit  https://github.com/CyanogenMod/android_frameworks_minikin/commit/f4785aa1947b8d22d5b19559ef1ca526d98e0e73
+
+[104] art/oatdump/oatdump.cc:1125:3: error: the frame size of 1776 bytes is larger than 1728 bytes [-Werror=frame-larger-than=]
+      * insert this line into android_art/build/Android.common_build.mk
+        art_target_non_debug_cflags += -Wframe-larger-than=1780
+      For ref  https://github.com/LineageOS/android_art/commit/37f0acca160bac88356c98427eda7d962907c07e
+
+[105] frameworks/av/media/libstagefright/codecs/on2/dec/SoftVPX.cpp:139:33: error: 'IMG_FMT_I420' was not declared in this scope
+      frameworks/av/media/libstagefright/codecs/on2/dec/SoftVPX.cpp:155:65: error: 'PLANE_Y' was not declared in this scope
+      frameworks/av/media/libstagefright/codecs/on2/dec/SoftVPX.cpp:156:65: error: 'PLANE_U' was not declared in this scope
+      frameworks/av/media/libstagefright/codecs/on2/dec/SoftVPX.cpp:157:65: error: 'PLANE_V' was not declared in this scope
+      * Cherry-pick this commit  https://github.com/LineageOS/android_frameworks_av/commit/5a6788730acfc6fd8f4a6ef89d2c376572a26b55
+
+[106] external/chromium_org/base/android/jni_generator/jni_generator.py:212 ValueError: substring not found.
+      * Compiling chromium for lollipop requires JDK 6/7. However even if we set necessary paths for java and javac pointing to JDK 6/7 we need to check the path of javap.
+        If the path for javap is not pointing to JDK 6/7 we can easily set it via  update-alternatives --config javap
+
+[107] frameworks/base/packages/SystemUI/src/com/android/systemui/qs/tiles/MusicTile.java:208: error: method does not override or implement a method from a supertype
+      frameworks/base/packages/SystemUI/src/com/android/systemui/qs/tiles/MusicTile.java:211: error: method does not override or implement a method from a supertype
+      * Comment/delete the erroneous methods as follows
+      /*    @Override
+            public void onClientFolderInfoBrowsedPlayer(String stringUri) { }
+      */
+
+[108] Error regarding wrong JDK version. You asked for an OpenJDK 7 build but your version is java version "1.7.0_80"
+      * Comment/delete this line from build/core/main.mk:199
+        $(error stop)
+
+[109] Prebuilt apk found in PRODUCT_COPY_FILES use BUILD_PREBUILT instead.
+      * Comment/delete these lines from build/core/Makefile
+        define check-product-copy-files
+        $(if $(filter %.apk, $(call word-colon, 2, $(1))),$(error \
+            Prebuilt apk found in PRODUCT_COPY_FILES: $(1), use BUILD_PREBUILT instead!))
+        endef
+
+[110] system/core/adb/adb_client.h:43:49: error: expected ')'
+      void adb_get_transport(TransportType* _Nullable type, const char* _Nullable* _Nullable serial);
+                                                      ^
+      system/core/adb/adb_client.h:43:23: note: to match this '('
+      void adb_get_transport(TransportType* _Nullable type, const char* _Nullable* _Nullable serial);
+                            ^
+      * For Flash-rom Revert this commit  https://github.com/Flash-ROM/system_core/commit/a166e71e216dbfe4bff8dfc369b10ab08e183427
+        Also remove nullability specifiers from  system/core/adb/adb_client.h
+        void adb_get_transport(TransportType* _Nullable type, const char* _Nullable* _Nullable serial);
+        void adb_get_transport(TransportType* type, const char** serial);
+
+[111] system/core/libbacktrace/BacktraceOffline.cpp:722:29: error: no member named 'getError' in 'llvm::Expected<std::__1::unique_ptr<llvm::object::Binary, std::__1::default_delete<llvm::object::Binary, std::__1::default_delete<llvm::object::Binary
+      * For Flash-rom  Cherry-pick this commit https://github.com/Flash-ROM/system_core/commit/91dc1575b10edcf23398d0a520c96ae274fd5427
+
+[112] error: 'libqmi_cci', needed by '/home/sachin/aosp-caf/out/target/product/lettuce/obj/EXECUTABLES/wpa_supplicant_intermediates/config.o', missing and no known rule to make it.
+      * remove aosp-caf's external/wpa_supplicant_8 and clone from halogenOS
+        git clone -b XOS-7.1 https://github.com/halogenOS/android_external_wpa_supplicant_8.git externel/wpa_supplicant_8
+
+[113] system/core/init/util.h:29:10: fatal error: 'selinux/label.h' file not found
+      * insert LOCAL_C_INCLUDES := system/core/init external/selinux/libselinux/include
+        in device/cyanogen/msm8916-common/init/Android.mk file
+      * The solution is here
+        https://github.com/halogenOS/android_device_oneplus_oneplus2/commit/43c65bf1d3ed986aa29fcfc0f4a80696df07229f
+
+[114] device/cyanogen/msm8916-common/init/init_msm8916.cpp:59:23: error: use of undeclared identifier 'property_get'
+      * cherry-pick this commit to solve 'property_get' error
+        https://github.com/DRohan898/android_device_cyanogen_msm8916-common/commit/eb1777af615a64ac568d12f92e0868f22105f56c       
+
+[115] scripts/extract-cert.c:21:10: fatal error: openssl/bio.h: No such file
+      scripts/sign-file.c:25:10: fatal error: openssl/opensslv.h: No such file
+      * apt-get install libssl-de
