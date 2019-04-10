@@ -762,3 +762,7 @@ typedef enum {
 [115] scripts/extract-cert.c:21:10: fatal error: openssl/bio.h: No such file
       scripts/sign-file.c:25:10: fatal error: openssl/opensslv.h: No such file
       * apt-get install libssl-de
+      
+[116] device/yu/lettuce/camera/QCamera2/Android.mk: error: camera.msm8916 (SHARED_LIBRARIES android-arm) missing           libqdMetaData (SHARED_LIBRARIES android-arm)
+
+      * clone media-caf and media hals from other rom :)  
