@@ -766,3 +766,14 @@ typedef enum {
 [116] device/yu/lettuce/camera/QCamera2/Android.mk: error: camera.msm8916 (SHARED_LIBRARIES android-arm) missing           libqdMetaData (SHARED_LIBRARIES android-arm)
 
       * clone media-caf and media hals from other rom :) // clone msm8916 caf branch
+      
+[117] /bin/sh: 1: bc: not found
+      .././Kbuild:66: recipe for target 'include/generated/timeconst.h' failed
+      make[2]: *** [include/generated/timeconst.h] Error 127
+      
+      * sudo apt-get install bc
+
+
+      
+
+      
