@@ -31,3 +31,9 @@ git clone git clone https://github.com/TheMuppets/proprietary_vendor_yu.git vend
 echo "=====================MEGA================================="
 sudo apt-get install ruby gem
 sudo gem install rmega
+
+echo "====================Kernel-Tools=========================="
+sudo apt-get install liblz4-tool
+sudo apt-get install -y chrpath gawk texinfo libsdl1.2-dev whiptail diffstat cpio libssl-dev
+
+
