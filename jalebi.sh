@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "====================Build Environment Rom========================"
 sudo apt-get update
 sudo apt-get install -y bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-dev libxml2 libxml2-utils lzop pngcrush schedtool squashfs-tools xsltproc zip zlib1g-dev unzip openjdk-8-jdk python ccache libtinfo5
@@ -14,26 +16,10 @@ git config --global user.email "iamhp2k@gmail.com"
 git config --global user.name "hpnightowl"
 
 echo "======================KERNEL============================="
-git clone https://github.com/hpnightowl/android_kernel.git -b jalebi kernel/cyanogen/msm8916
-
+git clone https://github.com/hpnightowl/android_kernel.git -b pie kernel/cyanogen/msm8916
 
 echo "======================Device Tree========================"
-git clone https://github.com/hpnightowl/android_device_yu_jalebi.git -b crdroid device/yu/jalebi
-
-
-echo "======================COMMON TREE========================"
-git clone https://github.com/hpnightowl/android_device_yu_jalebi.git -b com device/cyanogen/msm8916-common
-
+git clone https://github.com/hpnightowl/android_device_yu_jalebi.git -b pie device/yu/jalebi
 
 echo "=====================VeNDOR=============================="
-git clone git clone https://github.com/TheMuppets/proprietary_vendor_yu.git vendor/yu
-
-echo "=====================MEGA================================="
-sudo apt-get install ruby gem
-sudo gem install rmega
-
-echo "====================Kernel-Tools=========================="
-sudo apt-get install liblz4-tool
-sudo apt-get install -y chrpath gawk texinfo libsdl1.2-dev whiptail diffstat cpio libssl-dev
-
-
+git clone https://github.com/hpnightowl/proprietary_vendor_yu.git -b pie vendor/yu
