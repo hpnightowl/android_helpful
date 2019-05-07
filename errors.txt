@@ -773,7 +773,10 @@ typedef enum {
       
       * sudo apt-get install bc
 
+[118] /root/posp/out/target/product/lettuce/obj/ETC/vendor_file_contexts_intermediates/vendor_file_contexts.tmp: Multiple same specifications for /dev/block/platform/soc\.0/7824900\.sdhci/by-name/persist
 
+      *It(soc\.0/7824900\.sdhci/by-name/persist) has been in you device tree as well as in sepolicy of custom rom so remove either of the two
+      
       
 
       
