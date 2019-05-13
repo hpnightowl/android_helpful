@@ -777,6 +777,47 @@ typedef enum {
 
       *It(soc\.0/7824900\.sdhci/by-name/persist) has been in you device tree as well as in sepolicy of custom rom so remove either of the two
       
+[119] device/qcom/common/power/power.c:199:14: error: use of undeclared identifier 'POWER_HINT_CPU_BOOST'
+        case POWER_HINT_CPU_BOOST:
+             ^
+      *declare it in power.h or power-common.h
+
+device/qcom/common/power/power.c:200:14: error: use of undeclared identifier 'POWER_HINT_SET_PROFILE'
+        case POWER_HINT_SET_PROFILE:
+             ^
+            
+       *declare it in power.h or power-common.h
+            
+device/qcom/common/power/power.c:237:36: warning: unused variable 'video_encode_metadata' [-Wunused-variable]
+    struct video_encode_metadata_t video_encode_metadata;
+                                   ^
+device/qcom/common/power/power.c:456:20: error: use of undeclared identifier 'POWER_FEATURE_SUPPORTED_PROFILES'
+    if (feature == POWER_FEATURE_SUPPORTED_PROFILES) {
+                   ^
+       *declare it in power.h or power-common.h
+       
+       
+   * POWER_HINT_CPU_BOOST    = 0x00000110,
+   * POWER_HINT_SET_PROFILE  = 0x00000111
+       
+
+device/qcom/common/power/power.c:482:18: error: no member named 'getFeature' in 'struct power_module'; did you mean 'setFeature'?
+            dev->getFeature = get_feature;
+                 ^~~~~~~~~~
+                 setFeature
+hardware/libhardware/include/hardware/power.h:280:12: note: 'setFeature' declared here
+    void (*setFeature)(struct power_module *module, feature_t feature, int state);
+           ^
+device/qcom/common/power/power.c:482:29: warning: incompatible pointer types assigning to 'void (*)(struct power_module *, feature_t, int)' from 'int (struct power_module *, feature_t)' [-Wincompatible-pointer-types]
+            dev->getFeature = get_feature;
+                            ^ ~~~~~~~~~~~
+device/qcom/common/power/power.c:462:42: warning: unused parameter 'module' [-Wunused-parameter]
+static int power_open(const hw_module_t* module, const char* name,
+                                         ^
+device/qcom/common/power/power.c:517:6: error: field designator 'getFeature' does not refer to any field in type 'struct power_module'; did you mean 'setFeature'?
+    .getFeature = get_feature
+     ^~~~~~~~~~
+     setFeature
       
 
       
