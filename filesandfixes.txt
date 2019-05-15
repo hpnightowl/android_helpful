@@ -1,0 +1,52 @@
+BUGS SIGNAL
+
+Change all file berextensi librilxxx.so in system/lib with file from stock rom.
+If doesn't appear, check imei *#06#
+
+BUGS SENSOR
+
+Change file sensorservice in system/bin with file from stock rom
+Chamge file libsensorservice.so in system/lib with file from stock rom
+Change file sensor.default.so in system/lib/hw with file from stock rom
+
+BUGS CAMERA
+
+Change all file extensi mm-qcameraxxx in system/bin with file from stock rom
+Change file v4I2-qcamera-app in system/bin with file from stock rom
+Change file camera.msm7627a.so in system/lib/hw with file from stock rom
+Change file libcamera_client.so and libcameraservice.so in system/lib with file from stock rom
+Change all file libmmcameraxxx.so in system/lib with file from stock rom
+Change all libs started with *cam* in lib and lib64
+Change all libs started with *omx* in system/vendor
+
+BUGS FINGERPRINT (FPC/GOODIX)
+
+Change gx_fpd in bin folder from stock to port
+Change hwservicemanager in bin folder from stock to port
+Change android.hardware.fingerprint.xml in etc folder from stock to port
+Change libcom_fingerprints_service.so from lib and lib64 from stock to port
+Change fingerprint.default.so and fingerprint.msmxxxx.so in hw folder in lib and lib64 from stock to port
+Change name started in *fp* in vendor from stock to port
+
+BUGS WIFI
+
+Change file wpa_supplicant im system/bin with file from stock rom
+Change folder firmware and wifi in system/etc with file from stock rom
+Change file wifitest_recv.sh and wifitest_send.sh in system/etc with file from stock rom
+Change file libwpa_client.so in system/lib with file from stock rom
+Change file cfg80211.ko in system/lib/modules with file from stock rom
+Change folder ath6kl in system/lib/modules with file from stock rom
+Change file in folder wifi in system with file from stock rom
+
+BUGS GPU
+
+Change all file in folder egl in system/lib with file from stock rom
+
+BUGS USB
+
+Change file vfold.fstab in system/etc with file from stock rom
+NB: still bug? Repack boot.img and see the ramdisk files.
+
+BUGS VIDEO
+
+Change all file berextensi libchromaticxxx.so in system/lib with file from stock rom.
