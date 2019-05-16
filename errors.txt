@@ -819,5 +819,12 @@ device/qcom/common/power/power.c:517:6: error: field designator 'getFeature' doe
      ^~~~~~~~~~
      setFeature
       
+  
+[120]  fix setRequestingSid() function call
+      
+       *remove the function call from $(rom dir)/system/tools/hidl (make this line comment by adding //)
+       
+         eg  // out << "setRequestingSid(::android::hardware::details::gServiceSidMap.get(_hidl_impl), false);\n";
+         
 
       
