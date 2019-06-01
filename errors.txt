@@ -826,5 +826,8 @@ device/qcom/common/power/power.c:517:6: error: field designator 'getFeature' doe
        
          eg  // out << "setRequestingSid(::android::hardware::details::gServiceSidMap.get(_hidl_impl), false);\n";
          
-
-      
+[121] [ 99% 786/787] glob vendor/qcom/opensource/interfaces/display/config/1.3/src
+      ninja: error: '/home/ubuntu/aosip/out/host/linux-x86/bin/dtbToolAosip', needed by  '/home/ubuntu/aosip/out/target/product/lettuce/dt.img', missing and no known rule to make it
+      15:15:50 ninja failed with: exit status 1
+ 
+   *You Just need to clone device_qcom_common it is not there in the directory
