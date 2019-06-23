@@ -831,3 +831,7 @@ device/qcom/common/power/power.c:517:6: error: field designator 'getFeature' doe
       15:15:50 ninja failed with: exit status 1
  
    *You Just need to clone device_qcom_common it is not there in the directory
+
+[122] ninja: error: rebuilding '/home/ubuntu/viper/out/combined-viper_lettuce.ninja':     '/home/ubuntu/viper/out/target/product/lettuce/kernel', needed by 'kernel', missing and no known rule to make it
+
+   *compile your kernel first i.e define toolchain path for compiling 
