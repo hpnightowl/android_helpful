@@ -1,18 +1,19 @@
-#!/bin/bash
-echo "======================"
-echo "Welcome To Owls Building"
-echo "======================"
-make clean && make mrproper
+export PATH="$HOME/proton/bin:$PATH"
+SECONDS=0
+
 mkdir -p out
-export ARCH=arm64
-export SUBARCH=arm64
-export CLANG_PATH=~/owls/cc/clang-r383902/bin
-export CLANG_TRIPLE=aarch64-linux-gnu-
-export CROSS_COMPILE=~/owls/gcc_64/bin/aarch64-linux-android-
-export CROSS_COMPILE_ARM32=~/owls/gcc_32/bin/arm-linux-androideabi-
-export LD_LIBRARY_PATH=~/owls/cc/clang-r383902/lib64:$LD_LIBRARY_PATH
-make CC=clang AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=out vendor/trinket-perf_defconfig
-echo "==================="
-echo "Making Owls Nest"
-echo "==================="
-make CC=clang AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=out -j4
+make O=out ARCH=arm64 owl_defconfig
+make -j16 O=out ARCH=arm64 CC=clang AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- Image.gz-dtb
+
+if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+git clone -q https://github.com/hpnightowl/AnyKernel3.git
+cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3
+rm -f *zip
+cd AnyKernel3
+zip -r9 "../RMXXXX-$(date '+%m%d')" * -x '*.git*' README.md *placeholder
+cd ..
+rm -rf AnyKernel3
+echo -e "\nCompleted in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !"
+else
+echo -e "\nBuild failed!"
+fi
