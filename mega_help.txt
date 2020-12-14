@@ -1,0 +1,3 @@
+sudo apt-get install ruby gem
+gem install rmega
+rmega-up 'filename' -u 'email address'
