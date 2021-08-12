@@ -18,3 +18,8 @@ error: libcore/JavaLibrary.bp:1080:1: module "core.module_lib.stubs" already def
 error: libcore/JavaLibrary.bp:1097:1: module "core-module-lib-stubs-system-modules" already defined
        build/soong/java/core-libraries/Android.bp:103:1 <-- previous definition here
 05:03:29 soong bootstrap failed with: exit status 1
+
+solution commit msg: Move modules containing ART, conscrypt and i18n to build/soong 
+
+2) error: external/rust/crates/zip/Android.bp:21:1: "libzip" depends on undefined module "libflate2"
+05:15:20 soong bootstrap failed with: exit status 1
