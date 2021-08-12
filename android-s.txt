@@ -23,3 +23,5 @@ solution commit msg: Move modules containing ART, conscrypt and i18n to build/so
 
 2) error: external/rust/crates/zip/Android.bp:21:1: "libzip" depends on undefined module "libflate2"
 05:15:20 soong bootstrap failed with: exit status 1
+
+clone git clone https://android.googlesource.com/platform/external/rust/crates/flate2
