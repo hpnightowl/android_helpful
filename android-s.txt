@@ -1,0 +1,20 @@
+1) -n "out"     -d "out/soong/build.ninja.d"     -t -l out/.module_paths/Android.bp.list -globFile out/soong/.bootstrap/build-globs.ninja -o out/soong/build.ninja --available_env out/soong/soong.environment.available --used_env out/soong/soong.environment.used Android.bp
+error: build/soong/java/core-libraries/Android.bp:130:1: module "legacy.core.platform.api.stubs" already defined
+       libcore/mmodules/core_platform_api/Android.bp:55:1 <-- previous definition here
+error: build/soong/java/core-libraries/Android.bp:146:1: module "stable.core.platform.api.stubs" already defined
+       libcore/mmodules/core_platform_api/Android.bp:71:1 <-- previous definition here
+error: build/soong/java/core-libraries/Android.bp:164:1: module "legacy-core-platform-api-stubs-system-modules" already defined
+       libcore/mmodules/core_platform_api/Android.bp:89:1 <-- previous definition here
+error: build/soong/java/core-libraries/Android.bp:180:1: module "stable-core-platform-api-stubs-system-modules" already defined
+       libcore/mmodules/core_platform_api/Android.bp:105:1 <-- previous definition here
+error: libcore/JavaLibrary.bp:1021:1: module "core.current.stubs" already defined
+       build/soong/java/core-libraries/Android.bp:27:1 <-- previous definition here
+error: libcore/JavaLibrary.bp:1042:1: module "core-current-stubs-for-system-modules" already defined
+       build/soong/java/core-libraries/Android.bp:48:1 <-- previous definition here
+error: libcore/JavaLibrary.bp:1068:1: module "core-current-stubs-system-modules" already defined
+       build/soong/java/core-libraries/Android.bp:74:1 <-- previous definition here
+error: libcore/JavaLibrary.bp:1080:1: module "core.module_lib.stubs" already defined
+       build/soong/java/core-libraries/Android.bp:86:1 <-- previous definition here
+error: libcore/JavaLibrary.bp:1097:1: module "core-module-lib-stubs-system-modules" already defined
+       build/soong/java/core-libraries/Android.bp:103:1 <-- previous definition here
+05:03:29 soong bootstrap failed with: exit status 1
