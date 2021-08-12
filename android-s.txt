@@ -33,4 +33,7 @@ error: packages/modules/DnsResolver/Android.bp:323:1: "libdoh_ffi" depends on un
 4) error: packages/modules/Virtualization/microdroid_manager/Android.bp:32:1: "microdroid_manager_test" depends on undefined module "libkernlog"
 error: packages/modules/Virtualization/microdroid_manager/Android.bp:27:1: "microdroid_manager" depends on undefined module "libkernlog"
 
-3 and 4 are rust dependencies
+5) error: packages/modules/Virtualization/virtualizationservice/Android.bp:47:1: "virtualizationservice" depends on undefined module "libcommand_fds"
+error: packages/modules/Virtualization/virtualizationservice/Android.bp:53:1: "virtualizationservice_device_test" depends on undefined module "libcommand_fds"
+
+3 and 4 are rust dependencies can be cloned from here https://android.googlesource.com/platform/external/rust/crates/
