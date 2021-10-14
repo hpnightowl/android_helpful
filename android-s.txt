@@ -37,3 +37,45 @@ error: packages/modules/Virtualization/microdroid_manager/Android.bp:27:1: "micr
 error: packages/modules/Virtualization/virtualizationservice/Android.bp:53:1: "virtualizationservice_device_test" depends on undefined module "libcommand_fds"
 
 3 and 4 are rust dependencies can be cloned from here https://android.googlesource.com/platform/external/rust/crates/
+
+
+6) FAILED: /home/hpnightowl/404/out/soong/.intermediates/vendor/404/build/soong/generated_kernel_includes/gen/.dummy_dep
+/home/hpnightowl/404/out/soong/host/linux-x86/bin/sbox --sandbox-path /home/hpnightowl/404/out/soong/.temp --output-root /home/hpnightowl/404/out/soong/.in>
+flag provided but not defined: -output-root
+Usage: sbox --manifest <manifest> --sandbox-path <sandboxPath>
+  -keep-out-dir
+        whether to keep the sandbox directory when done
+  -manifest string
+        textproto manifest describing the sandboxed command(s)
+  -sandbox-path string
+        root of temp directory to put the sandbox int
+
+pick : [under review] https://review.lineageos.org/c/LineageOS/android_vendor_lineage/+/317189
+
+7) hardware/qcom-caf/wlan/qcwcn/wpa_supplicant_8_lib/driver_cmd_nl80211.c:67:47: error: too few arguments to function call, expected 6, have 4
+        ret = send_and_recv_msgs(drv, msg, NULL, NULL);
+              ~~~~~~~~~~~~~~~~~~                     ^
+external/wpa_supplicant_8/src/drivers/driver_nl80211.h:247:5: note: 'send_and_recv_msgs' declared here
+int send_and_recv_msgs(struct wpa_driver_nl80211_data *drv, struct nl_msg *msg,
+    ^
+hardware/qcom-caf/wlan/qcwcn/wpa_supplicant_8_lib/driver_cmd_nl80211.c:123:47: error: too few arguments to function call, expected 6, have 4
+        ret = send_and_recv_msgs(drv, msg, NULL, NULL);
+              ~~~~~~~~~~~~~~~~~~                     ^
+external/wpa_supplicant_8/src/drivers/driver_nl80211.h:247:5: note: 'send_and_recv_msgs' declared here
+int send_and_recv_msgs(struct wpa_driver_nl80211_data *drv, struct nl_msg *msg,
+    ^
+hardware/qcom-caf/wlan/qcwcn/wpa_supplicant_8_lib/driver_cmd_nl80211.c:161:47: error: too few arguments to function call, expected 6, have 4
+        ret = send_and_recv_msgs(drv, msg, NULL, NULL);
+              ~~~~~~~~~~~~~~~~~~                     ^
+external/wpa_supplicant_8/src/drivers/driver_nl80211.h:247:5: note: 'send_and_recv_msgs' declared here
+int send_and_recv_msgs(struct wpa_driver_nl80211_data *drv, struct nl_msg *msg,
+    ^
+hardware/qcom-caf/wlan/qcwcn/wpa_supplicant_8_lib/driver_cmd_nl80211.c:1847:65: error: too few arguments to function call, expected 6, have 4
+        ret = send_and_recv_msgs(drv, msg, thermal_info_handler, result);
+              ~~~~~~~~~~~~~~~~~~                                       ^
+external/wpa_supplicant_8/src/drivers/driver_nl80211.h:247:5: note: 'send_and_recv_msgs' declared here
+int send_and_recv_msgs(struct wpa_driver_nl80211_data *drv, struct nl_msg *msg,
+
+
+pick : https://github.com/Project-Fluid-Testing/hardware_qcom_wlan/commit/8b16a3b4c09fc72f8cd05fe3c4bcafbb8d1a5b67
+
