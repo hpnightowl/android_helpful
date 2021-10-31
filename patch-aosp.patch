@@ -1,0 +1,1201 @@
+From 57056b31d6fd6bae2644ef50f1f0953fc7dc34ec Mon Sep 17 00:00:00 2001
+From: Selim Cinek <cinek@google.com>
+Date: Mon, 23 Aug 2021 21:26:23 +0200
+Subject: [PATCH 01/11] Fix flicker when unlocking the screen.
+
+Fixes: 197113783
+Test: atest ScrimControllerTest
+Test: fp from: shade locked, aod, lock screen
+Test: switch between light and dark themes, look at scrim anim
+Change-Id: Iacd46b99c5a86c8f7a7706b91b0b78a3beb4c414
+Merged-In: Iacd46b99c5a86c8f7a7706b91b0b78a3beb4c414
+(cherry picked from commit c2dda240a72d254df893de857f1d2a76e9940942)
+---
+ .../statusbar/phone/ScrimController.java      |  2 +-
+ .../systemui/statusbar/phone/ScrimState.java  |  3 +-
+ .../statusbar/phone/ScrimControllerTest.java  | 50 +++++++++++++++++--
+ 3 files changed, 50 insertions(+), 5 deletions(-)
+
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java
+index cfcea9684c3b..7475440ce90c 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java
+@@ -418,7 +418,7 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
+         if (mKeyguardUpdateMonitor.needsSlowUnlockTransition() && mState == ScrimState.UNLOCKED) {
+             mAnimationDelay = StatusBar.FADE_KEYGUARD_START_DELAY;
+             scheduleUpdate();
+-        } else if ((oldState == ScrimState.AOD  // leaving doze
++        } else if (((oldState == ScrimState.AOD || oldState == ScrimState.PULSING)  // leaving doze
+                 && (!mDozeParameters.getAlwaysOn() || mState == ScrimState.UNLOCKED))
+                 || (mState == ScrimState.AOD && !mDozeParameters.getDisplayNeedsBlanking())) {
+             // Scheduling a frame isn't enough when:
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimState.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimState.java
+index 06811932ac0c..2c0de629de8a 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimState.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimState.java
+@@ -244,7 +244,8 @@ public enum ScrimState {
+                     ? mKeyguardFadingAwayDuration
+                     : StatusBar.FADE_KEYGUARD_DURATION;
+ 
+-            mAnimateChange = !mLaunchingAffordanceWithPreview;
++            boolean fromAod = previousState == AOD || previousState == PULSING;
++            mAnimateChange = !mLaunchingAffordanceWithPreview && !fromAod;
+ 
+             mFrontTint = Color.TRANSPARENT;
+             mBehindTint = Color.BLACK;
+diff --git a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java
+index 678b193073c2..7c2690b5d09f 100644
+--- a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java
++++ b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java
+@@ -20,6 +20,8 @@ import static com.android.systemui.statusbar.phone.ScrimController.OPAQUE;
+ import static com.android.systemui.statusbar.phone.ScrimController.SEMI_TRANSPARENT;
+ import static com.android.systemui.statusbar.phone.ScrimController.TRANSPARENT;
+ 
++import static com.google.common.truth.Truth.assertThat;
++
+ import static org.junit.Assert.assertEquals;
+ import static org.mockito.ArgumentMatchers.any;
+ import static org.mockito.ArgumentMatchers.anyFloat;
+@@ -734,9 +736,9 @@ public class ScrimControllerTest extends SysuiTestCase {
+     }
+ 
+     @Test
+-    public void transitionToUnlockedFromAod() {
+-        // Simulate unlock with fingerprint
+-        mScrimController.transitionTo(ScrimState.AOD);
++    public void transitionToUnlockedFromOff() {
++        // Simulate unlock with fingerprint without AOD
++        mScrimController.transitionTo(ScrimState.OFF);
+         mScrimController.setPanelExpansion(0f);
+         finishAnimationsImmediately();
+         mScrimController.transitionTo(ScrimState.UNLOCKED);
+@@ -764,6 +766,28 @@ public class ScrimControllerTest extends SysuiTestCase {
+         ));
+     }
+ 
++    @Test
++    public void transitionToUnlockedFromAod() {
++        // Simulate unlock with fingerprint
++        mScrimController.transitionTo(ScrimState.AOD);
++        mScrimController.setPanelExpansion(0f);
++        finishAnimationsImmediately();
++        mScrimController.transitionTo(ScrimState.UNLOCKED);
++
++        finishAnimationsImmediately();
++
++        // All scrims should be transparent at the end of fade transition.
++        assertScrimAlpha(Map.of(
++                mScrimInFront, TRANSPARENT,
++                mScrimBehind, TRANSPARENT));
++
++        // Make sure at the very end of the animation, we're reset to transparent
++        assertScrimTinted(Map.of(
++                mScrimInFront, false,
++                mScrimBehind, true
++        ));
++    }
++
+     @Test
+     public void scrimBlanksBeforeLeavingAod() {
+         // Simulate unlock with fingerprint
+@@ -1080,6 +1104,26 @@ public class ScrimControllerTest extends SysuiTestCase {
+                 mScrimInFront, TRANSPARENT));
+     }
+ 
++    @Test
++    public void testDoesntAnimate_whenUnlocking() {
++        // LightRevealScrim will animate the transition, we should only hide the keyguard scrims.
++        ScrimState.UNLOCKED.prepare(ScrimState.KEYGUARD);
++        assertThat(ScrimState.UNLOCKED.getAnimateChange()).isTrue();
++        ScrimState.UNLOCKED.prepare(ScrimState.PULSING);
++        assertThat(ScrimState.UNLOCKED.getAnimateChange()).isFalse();
++
++        ScrimState.UNLOCKED.prepare(ScrimState.KEYGUARD);
++        assertThat(ScrimState.UNLOCKED.getAnimateChange()).isTrue();
++        ScrimState.UNLOCKED.prepare(ScrimState.AOD);
++        assertThat(ScrimState.UNLOCKED.getAnimateChange()).isFalse();
++
++        // LightRevealScrim doesn't animate when AOD is disabled. We need to use the legacy anim.
++        ScrimState.UNLOCKED.prepare(ScrimState.KEYGUARD);
++        assertThat(ScrimState.UNLOCKED.getAnimateChange()).isTrue();
++        ScrimState.UNLOCKED.prepare(ScrimState.OFF);
++        assertThat(ScrimState.UNLOCKED.getAnimateChange()).isTrue();
++    }
++
+     @Test
+     public void testScrimsVisible_whenShadeVisible_clippingQs() {
+         mScrimController.setClipsQsScrim(true);
+-- 
+2.25.1
+
+
+From 722c4aceafd2277a194ec6196dddcc4ce678b22b Mon Sep 17 00:00:00 2001
+From: Jean-Michel Trivi <jmtrivi@google.com>
+Date: Mon, 9 Aug 2021 15:15:28 -0700
+Subject: [PATCH 02/11] Notification playback: pause on release
+
+When releasing a MediaPlayer outside of a playback
+completion (back to back notifications), pause and
+wait 100ms before releasing the player.
+
+Bug: 193832902
+Test: create back-to-back notifications, check for glitch
+Change-Id: Ib8baba4bf2b41e75b526e8490b6c2f31c85c193c
+(cherry picked from commit c69743ea169f8e0c87ecb48d6d9e81a1286605ee)
+---
+ media/java/android/media/PlayerBase.java      |  7 +++++++
+ .../systemui/media/NotificationPlayer.java    | 20 ++++++++++++++++---
+ 2 files changed, 24 insertions(+), 3 deletions(-)
+
+diff --git a/media/java/android/media/PlayerBase.java b/media/java/android/media/PlayerBase.java
+index 86ed50bacb63..72ee00f03774 100644
+--- a/media/java/android/media/PlayerBase.java
++++ b/media/java/android/media/PlayerBase.java
+@@ -102,6 +102,13 @@ public abstract class PlayerBase {
+         mState = AudioPlaybackConfiguration.PLAYER_STATE_IDLE;
+     };
+ 
++    /** @hide */
++    public int getPlayerIId() {
++        synchronized (mLock) {
++            return mPlayerIId;
++        }
++    }
++
+     /**
+      * Call from derived class when instantiation / initialization is successful
+      */
+diff --git a/packages/SystemUI/src/com/android/systemui/media/NotificationPlayer.java b/packages/SystemUI/src/com/android/systemui/media/NotificationPlayer.java
+index 89786ee880ad..a617850ef0ae 100644
+--- a/packages/SystemUI/src/com/android/systemui/media/NotificationPlayer.java
++++ b/packages/SystemUI/src/com/android/systemui/media/NotificationPlayer.java
+@@ -139,7 +139,7 @@ public class NotificationPlayer implements OnCompletionListener, OnErrorListener
+                                 + " with ducking", e);
+                     }
+                     player.start();
+-                    if (DEBUG) { Log.d(mTag, "player.start"); }
++                    if (DEBUG) { Log.d(mTag, "player.start piid:" + player.getPlayerIId()); }
+                 } catch (Exception e) {
+                     if (player != null) {
+                         player.release();
+@@ -155,7 +155,13 @@ public class NotificationPlayer implements OnCompletionListener, OnErrorListener
+                     mPlayer = player;
+                 }
+                 if (mp != null) {
+-                    if (DEBUG) { Log.d(mTag, "mPlayer.release"); }
++                    if (DEBUG) {
++                        Log.d(mTag, "mPlayer.pause+release piid:" + player.getPlayerIId());
++                    }
++                    mp.pause();
++                    try {
++                        Thread.sleep(100);
++                    } catch (InterruptedException ie) { }
+                     mp.release();
+                 }
+                 this.notify();
+@@ -244,6 +250,10 @@ public class NotificationPlayer implements OnCompletionListener, OnErrorListener
+                         try {
+                             mp.stop();
+                         } catch (Exception e) { }
++                        if (DEBUG) {
++                            Log.i(mTag, "About to release MediaPlayer piid:"
++                                    + mp.getPlayerIId() + " due to notif cancelled");
++                        }
+                         mp.release();
+                         synchronized(mQueueAudioFocusLock) {
+                             if (mAudioManagerWithAudioFocus != null) {
+@@ -284,7 +294,7 @@ public class NotificationPlayer implements OnCompletionListener, OnErrorListener
+     public void onCompletion(MediaPlayer mp) {
+         synchronized(mQueueAudioFocusLock) {
+             if (mAudioManagerWithAudioFocus != null) {
+-                if (DEBUG) Log.d(mTag, "onCompletion() abandonning AudioFocus");
++                if (DEBUG) Log.d(mTag, "onCompletion() abandoning AudioFocus");
+                 mAudioManagerWithAudioFocus.abandonAudioFocus(null);
+                 mAudioManagerWithAudioFocus = null;
+             } else {
+@@ -310,6 +320,10 @@ public class NotificationPlayer implements OnCompletionListener, OnErrorListener
+             }
+         }
+         if (mp != null) {
++            if (DEBUG) {
++                Log.i("NotificationPlayer", "About to release MediaPlayer piid:"
++                        + mp.getPlayerIId() + " due to onCompletion");
++            }
+             mp.release();
+         }
+     }
+-- 
+2.25.1
+
+
+From 82b9762a1c60564cd0dbbfd4b70fe2b905676a9d Mon Sep 17 00:00:00 2001
+From: Selim Cinek <cinek@google.com>
+Date: Fri, 20 Aug 2021 15:34:30 +0200
+Subject: [PATCH 03/11] Fixes two bright flashes of the notification scrim
+
+We were previously going to UNLOCKED state if if there was no camera
+preview leading to a bright flash in light mode. we now only do this
+when the whole screen is obscured anyway by the camera preview.
+This also fixes another scrim issue where the unocclusion would
+flash the notification scrim, because it's expanding, which
+usually shows the bouncer with a bright background during the
+expansion.
+
+Test: atest SystemUITests
+Fixes: 197160246
+Merged-In: I418e878698c2606856b93faf774cd87830773815
+Change-Id: I418e878698c2606856b93faf774cd87830773815
+(cherry picked from commit ee48cd0962191e6304a11937e9a80151792bcdfb)
+---
+ .../statusbar/phone/ScrimController.java      | 19 +++++++++++++++
+ .../systemui/statusbar/phone/StatusBar.java   |  7 +++---
+ .../statusbar/phone/ScrimControllerTest.java  | 13 ++++++++++
+ .../statusbar/phone/StatusBarTest.java        | 24 +++++++++++++++++++
+ 4 files changed, 59 insertions(+), 4 deletions(-)
+
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java
+index 7475440ce90c..2ae59f12b25c 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java
+@@ -111,6 +111,20 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
+      */
+     private boolean mTransitioningToFullShade;
+ 
++    /**
++     * Is there currently an unocclusion animation running. Used to avoid bright flickers
++     * of the notification scrim.
++     */
++    private boolean mUnOcclusionAnimationRunning;
++
++    /**
++     * Set whether an unocclusion animation is currently running on the notification panel. Used
++     * to avoid bright flickers of the notification scrim.
++     */
++    public void setUnocclusionAnimationRunning(boolean unocclusionAnimationRunning) {
++        mUnOcclusionAnimationRunning = unocclusionAnimationRunning;
++    }
++
+     @IntDef(prefix = {"VISIBILITY_"}, value = {
+             TRANSPARENT,
+             SEMI_TRANSPARENT,
+@@ -466,6 +480,7 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
+ 
+     public void onExpandingFinished() {
+         mTracking = false;
++        setUnocclusionAnimationRunning(false);
+     }
+ 
+     @VisibleForTesting
+@@ -694,6 +709,10 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
+                 mNotificationsTint = mState.getNotifTint();
+                 mBehindTint = behindTint;
+             }
++            if (mUnOcclusionAnimationRunning && mState == ScrimState.KEYGUARD) {
++                // We're unoccluding the keyguard and don't want to have a bright flash.
++                mNotificationsAlpha = 0f;
++            }
+         }
+         if (isNaN(mBehindAlpha) || isNaN(mInFrontAlpha) || isNaN(mNotificationsAlpha)) {
+             throw new IllegalStateException("Scrim opacity is NaN for state: " + mState
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBar.java
+index d257165ae24e..0148167fddd0 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBar.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBar.java
+@@ -3579,6 +3579,7 @@ public class StatusBar extends SystemUI implements DemoMode,
+     public void animateKeyguardUnoccluding() {
+         mNotificationPanelViewController.setExpandedFraction(0f);
+         animateExpandNotificationsPanel();
++        mScrimController.setUnocclusionAnimationRunning(true);
+     }
+ 
+     /**
+@@ -4466,10 +4467,8 @@ public class StatusBar extends SystemUI implements DemoMode,
+             ScrimState state = mStatusBarKeyguardViewManager.bouncerNeedsScrimming()
+                     ? ScrimState.BOUNCER_SCRIMMED : ScrimState.BOUNCER;
+             mScrimController.transitionTo(state);
+-        } else if (isInLaunchTransition()
+-                || mLaunchCameraWhenFinishedWaking
+-                || launchingAffordanceWithPreview) {
+-            // TODO(b/170133395) Investigate whether Emergency Gesture flag should be included here.
++        } else if (launchingAffordanceWithPreview) {
++            // We want to avoid animating when launching with a preview.
+             mScrimController.transitionTo(ScrimState.UNLOCKED, mUnlockScrimCallback);
+         } else if (mBrightnessMirrorVisible) {
+             mScrimController.transitionTo(ScrimState.BRIGHTNESS_MIRROR);
+diff --git a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java
+index 7c2690b5d09f..1b2d5cdcbf0d 100644
+--- a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java
++++ b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java
+@@ -1181,6 +1181,19 @@ public class ScrimControllerTest extends SysuiTestCase {
+         assertAlphaAfterExpansion(mNotificationsScrim, /* alpha */ 0.47f, /* expansion */ 0.2f);
+     }
+ 
++    @Test
++    public void testNotificationTransparency_unnocclusion() {
++        mScrimController.transitionTo(ScrimState.KEYGUARD);
++        mScrimController.setUnocclusionAnimationRunning(true);
++
++        assertAlphaAfterExpansion(mNotificationsScrim, /* alpha */ 0.0f, /* expansion */ 0.0f);
++        assertAlphaAfterExpansion(mNotificationsScrim, /* alpha */ 0.0f, /* expansion */ 1.0f);
++
++        // Verify normal behavior after
++        mScrimController.setUnocclusionAnimationRunning(false);
++        assertAlphaAfterExpansion(mNotificationsScrim, /* alpha */ 0.2f, /* expansion */ 0.4f);
++    }
++
+     @Test
+     public void testNotificationTransparency_inKeyguardState() {
+         mScrimController.transitionTo(ScrimState.KEYGUARD);
+diff --git a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarTest.java b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarTest.java
+index 2c2833a864b9..bd9835c0e8e3 100644
+--- a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarTest.java
++++ b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarTest.java
+@@ -811,6 +811,30 @@ public class StatusBarTest extends SysuiTestCase {
+         verify(mScrimController).transitionTo(eq(ScrimState.UNLOCKED), any());
+     }
+ 
++    @Test
++    public void testTransitionLaunch_goesToUnlocked() {
++        mStatusBar.setBarStateForTest(StatusBarState.KEYGUARD);
++        mStatusBar.showKeyguardImpl();
++
++        // Starting a pulse should change the scrim controller to the pulsing state
++        when(mNotificationPanelViewController.isLaunchTransitionRunning()).thenReturn(true);
++        when(mNotificationPanelViewController.isLaunchingAffordanceWithPreview()).thenReturn(true);
++        mStatusBar.updateScrimController();
++        verify(mScrimController).transitionTo(eq(ScrimState.UNLOCKED), any());
++    }
++
++    @Test
++    public void testTransitionLaunch_noPreview_doesntGoUnlocked() {
++        mStatusBar.setBarStateForTest(StatusBarState.KEYGUARD);
++        mStatusBar.showKeyguardImpl();
++
++        // Starting a pulse should change the scrim controller to the pulsing state
++        when(mNotificationPanelViewController.isLaunchTransitionRunning()).thenReturn(true);
++        when(mNotificationPanelViewController.isLaunchingAffordanceWithPreview()).thenReturn(false);
++        mStatusBar.updateScrimController();
++        verify(mScrimController).transitionTo(eq(ScrimState.KEYGUARD));
++    }
++
+     @Test
+     public void testSetOccluded_propagatesToScrimController() {
+         mStatusBar.setOccluded(true);
+-- 
+2.25.1
+
+
+From b23c44ced985fdbfc44b4e0d3f209ad59c02b367 Mon Sep 17 00:00:00 2001
+From: Beverly <beverlyt@google.com>
+Date: Mon, 23 Aug 2021 18:01:29 -0400
+Subject: [PATCH 04/11] On keyguard unoccluding, set notif scrim alpha to
+ KEYGUARD_SCRIM_ALPHA
+
+We still want the keyguard notification scrim after
+the unoccluding transition.
+
+Test: manual, atest ScrimControllerTest
+Bug: 197160246
+Change-Id: I210ba3491eb98c30bec121c6119f6dfb1d6aeba7
+(cherry picked from commit 7ec73696bde41235a76844c97a5e115c434110be)
+---
+ .../android/systemui/statusbar/phone/ScrimController.java  | 3 ++-
+ .../systemui/statusbar/phone/ScrimControllerTest.java      | 7 +++++--
+ 2 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java
+index 2ae59f12b25c..7d25aeef6f98 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/ScrimController.java
+@@ -711,7 +711,8 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
+             }
+             if (mUnOcclusionAnimationRunning && mState == ScrimState.KEYGUARD) {
+                 // We're unoccluding the keyguard and don't want to have a bright flash.
+-                mNotificationsAlpha = 0f;
++                mNotificationsAlpha = KEYGUARD_SCRIM_ALPHA;
++                mNotificationsTint = ScrimState.KEYGUARD.getNotifTint();
+             }
+         }
+         if (isNaN(mBehindAlpha) || isNaN(mInFrontAlpha) || isNaN(mNotificationsAlpha)) {
+diff --git a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java
+index 1b2d5cdcbf0d..c71318fa9464 100644
+--- a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java
++++ b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/ScrimControllerTest.java
+@@ -16,6 +16,7 @@
+ 
+ package com.android.systemui.statusbar.phone;
+ 
++import static com.android.systemui.statusbar.phone.ScrimController.KEYGUARD_SCRIM_ALPHA;
+ import static com.android.systemui.statusbar.phone.ScrimController.OPAQUE;
+ import static com.android.systemui.statusbar.phone.ScrimController.SEMI_TRANSPARENT;
+ import static com.android.systemui.statusbar.phone.ScrimController.TRANSPARENT;
+@@ -1186,8 +1187,10 @@ public class ScrimControllerTest extends SysuiTestCase {
+         mScrimController.transitionTo(ScrimState.KEYGUARD);
+         mScrimController.setUnocclusionAnimationRunning(true);
+ 
+-        assertAlphaAfterExpansion(mNotificationsScrim, /* alpha */ 0.0f, /* expansion */ 0.0f);
+-        assertAlphaAfterExpansion(mNotificationsScrim, /* alpha */ 0.0f, /* expansion */ 1.0f);
++        assertAlphaAfterExpansion(mNotificationsScrim, /* alpha */ KEYGUARD_SCRIM_ALPHA,
++                /* expansion */ 0.0f);
++        assertAlphaAfterExpansion(mNotificationsScrim, /* alpha */ KEYGUARD_SCRIM_ALPHA,
++                /* expansion */ 1.0f);
+ 
+         // Verify normal behavior after
+         mScrimController.setUnocclusionAnimationRunning(false);
+-- 
+2.25.1
+
+
+From 2d5ce4777b31fdeb0394c8dbcf2eb42836f13137 Mon Sep 17 00:00:00 2001
+From: Beverly <beverlyt@google.com>
+Date: Fri, 27 Aug 2021 13:10:14 -0400
+Subject: [PATCH 05/11] notification stack scroller doesn't need a11y focus
+
+Only its contents need to get focus. This was causing the empty space
+on the lock screen to get a11y focus with the description "no label"
+
+Test: manual (large clock - tap in empty space, no focus is given)
+Fixes: 195614563
+Change-Id: If8b8d069ef111a8df1bc659e25dd5c01a79528a2
+(cherry picked from commit 755fdb467ac8d92525cef69195c6964e153495d2)
+---
+ packages/SystemUI/res/layout/status_bar_expanded.xml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/packages/SystemUI/res/layout/status_bar_expanded.xml b/packages/SystemUI/res/layout/status_bar_expanded.xml
+index 6d5be301a82d..95120cf87540 100644
+--- a/packages/SystemUI/res/layout/status_bar_expanded.xml
++++ b/packages/SystemUI/res/layout/status_bar_expanded.xml
+@@ -114,6 +114,7 @@
+             android:layout_width="@dimen/notification_panel_width"
+             android:layout_height="match_parent"
+             android:layout_marginBottom="@dimen/close_handle_underlap"
++            android:importantForAccessibility="no"
+             systemui:layout_constraintStart_toStartOf="parent"
+             systemui:layout_constraintEnd_toEndOf="parent"
+         />
+-- 
+2.25.1
+
+
+From 3a1dcc1628ece0efce88fc02461ad13f1d312043 Mon Sep 17 00:00:00 2001
+From: Michael Wright <michaelwr@google.com>
+Date: Sat, 14 Aug 2021 00:19:12 +0100
+Subject: [PATCH 06/11] Only update the display when brightness and state are
+ valid.
+
+If either are invalid then we're in an indeterminant state and need to
+wait until that's resolved. This should only happens at boot and then is
+immediately corrected when we set our initial desired state. By not
+checking the validity of the to-be-applied state, we're actually turning
+the display to our assumed state briefly (i.e. OFF) even though we don't
+know what state we actually want yet.
+
+Fixes: 196566901
+Fixes: 196274559
+Fixes: 195071558
+Test: Reboot device, no flicker in boot animation
+Change-Id: Ie5a4c186e3af31eb8810f5c7014a4e2cc7cdbf91
+(cherry picked from commit a00cda677956e0553a6de4df8f25ebc9b2b3039e)
+---
+ .../java/com/android/server/display/DisplayPowerState.java  | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/services/core/java/com/android/server/display/DisplayPowerState.java b/services/core/java/com/android/server/display/DisplayPowerState.java
+index b58dd38348aa..0ec05a8189bd 100644
+--- a/services/core/java/com/android/server/display/DisplayPowerState.java
++++ b/services/core/java/com/android/server/display/DisplayPowerState.java
+@@ -411,7 +411,7 @@ final class DisplayPowerState {
+      * Updates the state of the screen and backlight asynchronously on a separate thread.
+      */
+     private final class PhotonicModulator extends Thread {
+-        private static final int INITIAL_SCREEN_STATE = Display.STATE_OFF; // unknown, assume off
++        private static final int INITIAL_SCREEN_STATE = Display.STATE_UNKNOWN;
+         private static final float INITIAL_BACKLIGHT_FLOAT = PowerManager.BRIGHTNESS_INVALID_FLOAT;
+ 
+         private final Object mLock = new Object();
+@@ -498,7 +498,9 @@ final class DisplayPowerState {
+                     if (!backlightChanged) {
+                         mBacklightChangeInProgress = false;
+                     }
+-                    if (!stateChanged && !backlightChanged) {
++                    boolean valid = state != Display.STATE_UNKNOWN && !Float.isNaN(brightnessState);
++                    boolean changed = stateChanged || backlightChanged;
++                    if (!valid || !changed) {
+                         try {
+                             mLock.wait();
+                         } catch (InterruptedException ex) {
+-- 
+2.25.1
+
+
+From 2be28cf6f242f1a01a2638577801dc36be03970b Mon Sep 17 00:00:00 2001
+From: Ming-Shin Lu <lumark@google.com>
+Date: Thu, 26 Aug 2021 18:31:01 +0800
+Subject: [PATCH 07/11] Fix IME flickering when swiping out to home
+
+When switching tasks between different users (i.e. primary and
+work-profile user), if the source task has shown IME, when going to
+the target task, IMMS will first unbind the current input method of
+the current user and hide the soft-keyboard and the window token
+by HIDE_SWITCH_USER reason, and then re-bind the input method of
+the target user when focused to the target task.
+
+If the hide soft-keyboard somehow being delayed and comes after the
+target task has been focused and be the next IME target, user will
+see the window removal transition on top of this IME target window.
+(i.e. launching Google chat apps with IME shown from work-profile
+ and then swiping out to home screen)
+
+Even if we disable window animation in Activity#onDestory in IME
+client side, the next relayout can come before that, so window exit
+transition still happens.
+
+To fix this timing issue, add animateExit parameter in
+WindowManagerInternal#removeToken for IMMS not to perform window exit
+animation and to hide the window surface permanentaly, so we can
+avoid the window surface becoming visible again unexpectedly during
+relayout.
+
+Fix: 197494607
+Fix: 195449326
+Test: atest WindowTokenTests#\
+        testRemoveWindowToken_noAnimateExitWhenSet
+Test: manual as issue steps:
+1. Enter Google chat
+2. Start typing a message
+3. Swipe home
+4. Expect no IME surface flicker happens
+
+Merged-In: I044257b5ac0d92dd06dae8eba996ea0ac6f1e659
+Change-Id: I044257b5ac0d92dd06dae8eba996ea0ac6f1e659
+(cherry picked from commit 0b44f104b3893877960f7a9a41927911469ae563)
+---
+ .../InputMethodManagerService.java            | 12 ++--
+ .../com/android/server/wm/DisplayContent.java |  6 +-
+ .../server/wm/WallpaperWindowToken.java       |  4 +-
+ .../server/wm/WindowManagerInternal.java      | 15 +++-
+ .../server/wm/WindowManagerService.java       | 69 ++++++++-----------
+ .../com/android/server/wm/WindowState.java    | 13 +++-
+ .../com/android/server/wm/WindowToken.java    | 10 +--
+ .../android/server/wm/WindowTokenTests.java   | 29 +++++++-
+ 8 files changed, 98 insertions(+), 60 deletions(-)
+
+diff --git a/services/core/java/com/android/server/inputmethod/InputMethodManagerService.java b/services/core/java/com/android/server/inputmethod/InputMethodManagerService.java
+index dc955337fdbc..3e52f5e07e62 100644
+--- a/services/core/java/com/android/server/inputmethod/InputMethodManagerService.java
++++ b/services/core/java/com/android/server/inputmethod/InputMethodManagerService.java
+@@ -2582,14 +2582,12 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
+         }
+ 
+         if (mCurToken != null) {
+-            try {
+-                if (DEBUG) {
+-                    Slog.v(TAG, "Removing window token: " + mCurToken + " for display: "
+-                            + mCurTokenDisplayId);
+-                }
+-                mIWindowManager.removeWindowToken(mCurToken, mCurTokenDisplayId);
+-            } catch (RemoteException e) {
++            if (DEBUG) {
++                Slog.v(TAG, "Removing window token: " + mCurToken + " for display: "
++                        + mCurTokenDisplayId);
+             }
++            mWindowManagerInternal.removeWindowToken(mCurToken, false /* removeWindows */,
++                    false /* animateExit */, mCurTokenDisplayId);
+             // Set IME window status as invisible when unbind current method.
+             mImeWindowVis = 0;
+             mBackDisposition = InputMethodService.BACK_DISPOSITION_DEFAULT;
+diff --git a/services/core/java/com/android/server/wm/DisplayContent.java b/services/core/java/com/android/server/wm/DisplayContent.java
+index dbc1116ad389..6892dbc158d4 100644
+--- a/services/core/java/com/android/server/wm/DisplayContent.java
++++ b/services/core/java/com/android/server/wm/DisplayContent.java
+@@ -1165,10 +1165,10 @@ class DisplayContent extends RootDisplayArea implements WindowManagerPolicy.Disp
+         }
+     }
+ 
+-    WindowToken removeWindowToken(IBinder binder) {
++    WindowToken removeWindowToken(IBinder binder, boolean animateExit) {
+         final WindowToken token = mTokenMap.remove(binder);
+         if (token != null && token.asActivityRecord() == null) {
+-            token.setExiting();
++            token.setExiting(animateExit);
+         }
+         return token;
+     }
+@@ -1252,7 +1252,7 @@ class DisplayContent extends RootDisplayArea implements WindowManagerPolicy.Disp
+     }
+ 
+     void removeAppToken(IBinder binder) {
+-        final WindowToken token = removeWindowToken(binder);
++        final WindowToken token = removeWindowToken(binder, true /* animateExit */);
+         if (token == null) {
+             Slog.w(TAG_WM, "removeAppToken: Attempted to remove non-existing token: " + binder);
+             return;
+diff --git a/services/core/java/com/android/server/wm/WallpaperWindowToken.java b/services/core/java/com/android/server/wm/WallpaperWindowToken.java
+index 194f48f57cc4..b54e8b7a7b4e 100644
+--- a/services/core/java/com/android/server/wm/WallpaperWindowToken.java
++++ b/services/core/java/com/android/server/wm/WallpaperWindowToken.java
+@@ -66,8 +66,8 @@ class WallpaperWindowToken extends WindowToken {
+     }
+ 
+     @Override
+-    void setExiting() {
+-        super.setExiting();
++    void setExiting(boolean animateExit) {
++        super.setExiting(animateExit);
+         mDisplayContent.mWallpaperController.removeWallpaperToken(this);
+     }
+ 
+diff --git a/services/core/java/com/android/server/wm/WindowManagerInternal.java b/services/core/java/com/android/server/wm/WindowManagerInternal.java
+index 47087cfbd147..4fac05c349c5 100644
+--- a/services/core/java/com/android/server/wm/WindowManagerInternal.java
++++ b/services/core/java/com/android/server/wm/WindowManagerInternal.java
+@@ -445,8 +445,21 @@ public abstract class WindowManagerInternal {
+      * @param removeWindows Whether to also remove the windows associated with the token.
+      * @param displayId The display to remove the token from.
+      */
++    public final void removeWindowToken(android.os.IBinder token, boolean removeWindows,
++            int displayId) {
++        removeWindowToken(token, removeWindows, true /* animateExit */, displayId);
++    }
++
++    /**
++     * Removes a window token.
++     *
++     * @param token The toke to remove.
++     * @param removeWindows Whether to also remove the windows associated with the token.
++     * @param animateExit Whether to play the windows exit animation after the token removal.
++     * @param displayId The display to remove the token from.
++     */
+     public abstract void removeWindowToken(android.os.IBinder token, boolean removeWindows,
+-            int displayId);
++            boolean animateExit, int displayId);
+ 
+     /**
+      * Registers a listener to be notified about app transition events.
+diff --git a/services/core/java/com/android/server/wm/WindowManagerService.java b/services/core/java/com/android/server/wm/WindowManagerService.java
+index 1f0a4da85267..c9e596d106ca 100644
+--- a/services/core/java/com/android/server/wm/WindowManagerService.java
++++ b/services/core/java/com/android/server/wm/WindowManagerService.java
+@@ -2820,6 +2820,31 @@ public class WindowManagerService extends IWindowManager.Stub
+ 
+     }
+ 
++    void removeWindowToken(IBinder binder, boolean removeWindows, boolean animateExit,
++            int displayId) {
++        synchronized (mGlobalLock) {
++            final DisplayContent dc = mRoot.getDisplayContent(displayId);
++
++            if (dc == null) {
++                ProtoLog.w(WM_ERROR, "removeWindowToken: Attempted to remove token: %s"
++                        + " for non-exiting displayId=%d", binder, displayId);
++                return;
++            }
++            final WindowToken token = dc.removeWindowToken(binder, animateExit);
++            if (token == null) {
++                ProtoLog.w(WM_ERROR,
++                        "removeWindowToken: Attempted to remove non-existing token: %s",
++                        binder);
++                return;
++            }
++
++            if (removeWindows) {
++                token.removeAllWindowsIfPossible();
++            }
++            dc.getInputMonitor().updateInputWindowsLw(true /* force */);
++        }
++    }
++
+     @Override
+     public void removeWindowToken(IBinder binder, int displayId) {
+         if (!checkCallingPermission(MANAGE_APP_TOKENS, "removeWindowToken()")) {
+@@ -2827,23 +2852,7 @@ public class WindowManagerService extends IWindowManager.Stub
+         }
+         final long origId = Binder.clearCallingIdentity();
+         try {
+-            synchronized (mGlobalLock) {
+-                final DisplayContent dc = mRoot.getDisplayContent(displayId);
+-
+-                if (dc == null) {
+-                    ProtoLog.w(WM_ERROR, "removeWindowToken: Attempted to remove token: %s"
+-                            + " for non-exiting displayId=%d", binder, displayId);
+-                    return;
+-                }
+-                final WindowToken token = dc.removeWindowToken(binder);
+-                if (token == null) {
+-                    ProtoLog.w(WM_ERROR,
+-                            "removeWindowToken: Attempted to remove non-existing token: %s",
+-                            binder);
+-                    return;
+-                }
+-                dc.getInputMonitor().updateInputWindowsLw(true /*force*/);
+-            }
++            removeWindowToken(binder, false /* removeWindows */, true /* animateExit */, displayId);
+         } finally {
+             Binder.restoreCallingIdentity(origId);
+         }
+@@ -7565,28 +7574,10 @@ public class WindowManagerService extends IWindowManager.Stub
+         }
+ 
+         @Override
+-        public void removeWindowToken(IBinder binder, boolean removeWindows, int displayId) {
+-            synchronized (mGlobalLock) {
+-                if (removeWindows) {
+-                    final DisplayContent dc = mRoot.getDisplayContent(displayId);
+-                    if (dc == null) {
+-                        ProtoLog.w(WM_ERROR, "removeWindowToken: Attempted to remove token: %s"
+-                                + " for non-exiting displayId=%d", binder, displayId);
+-                        return;
+-                    }
+-
+-                    final WindowToken token = dc.removeWindowToken(binder);
+-                    if (token == null) {
+-                        ProtoLog.w(WM_ERROR,
+-                                "removeWindowToken: Attempted to remove non-existing token: %s",
+-                                binder);
+-                        return;
+-                    }
+-
+-                    token.removeAllWindowsIfPossible();
+-                }
+-                WindowManagerService.this.removeWindowToken(binder, displayId);
+-            }
++        public void removeWindowToken(IBinder binder, boolean removeWindows, boolean animateExit,
++                int displayId) {
++            WindowManagerService.this.removeWindowToken(binder, removeWindows, animateExit,
++                    displayId);
+         }
+ 
+         @Override
+diff --git a/services/core/java/com/android/server/wm/WindowState.java b/services/core/java/com/android/server/wm/WindowState.java
+index c3fc99554bcc..5e042efa2f11 100644
+--- a/services/core/java/com/android/server/wm/WindowState.java
++++ b/services/core/java/com/android/server/wm/WindowState.java
+@@ -2180,11 +2180,18 @@ class WindowState extends WindowContainer<WindowState> implements WindowManagerP
+         }
+     }
+ 
+-    boolean onSetAppExiting() {
++    boolean onSetAppExiting(boolean animateExit) {
+         final DisplayContent displayContent = getDisplayContent();
+         boolean changed = false;
+ 
+-        if (isVisibleNow()) {
++        if (!animateExit) {
++            // Hide the window permanently if no window exist animation is performed, so we can
++            // avoid the window surface becoming visible again unexpectedly during the next
++            // relayout.
++            mPermanentlyHidden = true;
++            hide(false /* doAnimation */, false /* requestAnim */);
++        }
++        if (isVisibleNow() && animateExit) {
+             mWinAnimator.applyAnimationLocked(TRANSIT_EXIT, false);
+             if (mWmService.mAccessibilityController != null) {
+                 mWmService.mAccessibilityController.onWindowTransition(this, TRANSIT_EXIT);
+@@ -2197,7 +2204,7 @@ class WindowState extends WindowContainer<WindowState> implements WindowManagerP
+ 
+         for (int i = mChildren.size() - 1; i >= 0; --i) {
+             final WindowState c = mChildren.get(i);
+-            changed |= c.onSetAppExiting();
++            changed |= c.onSetAppExiting(animateExit);
+         }
+ 
+         return changed;
+diff --git a/services/core/java/com/android/server/wm/WindowToken.java b/services/core/java/com/android/server/wm/WindowToken.java
+index fbfa400ba852..3cbc67c004cd 100644
+--- a/services/core/java/com/android/server/wm/WindowToken.java
++++ b/services/core/java/com/android/server/wm/WindowToken.java
+@@ -24,6 +24,7 @@ import static com.android.internal.protolog.ProtoLogGroup.WM_DEBUG_ADD_REMOVE;
+ import static com.android.internal.protolog.ProtoLogGroup.WM_DEBUG_APP_TRANSITIONS;
+ import static com.android.internal.protolog.ProtoLogGroup.WM_DEBUG_FOCUS;
+ import static com.android.internal.protolog.ProtoLogGroup.WM_DEBUG_WINDOW_MOVEMENT;
++import static com.android.server.wm.SurfaceAnimator.ANIMATION_TYPE_WINDOW_ANIMATION;
+ import static com.android.server.wm.WindowContainer.AnimationFlags.CHILDREN;
+ import static com.android.server.wm.WindowContainer.AnimationFlags.PARENTS;
+ import static com.android.server.wm.WindowContainer.AnimationFlags.TRANSITION;
+@@ -232,7 +233,7 @@ class WindowToken extends WindowContainer<WindowState> {
+         }
+     }
+ 
+-    void setExiting() {
++    void setExiting(boolean animateExit) {
+         if (isEmpty()) {
+             super.removeImmediately();
+             return;
+@@ -247,11 +248,12 @@ class WindowToken extends WindowContainer<WindowState> {
+ 
+         final int count = mChildren.size();
+         boolean changed = false;
+-        final boolean delayed = isAnimating(TRANSITION | PARENTS | CHILDREN);
++        final boolean delayed = isAnimating(TRANSITION | PARENTS)
++                || (isAnimating(CHILDREN, ANIMATION_TYPE_WINDOW_ANIMATION) && animateExit);
+ 
+         for (int i = 0; i < count; i++) {
+             final WindowState win = mChildren.get(i);
+-            changed |= win.onSetAppExiting();
++            changed |= win.onSetAppExiting(animateExit);
+         }
+ 
+         final ActivityRecord app = asActivityRecord();
+@@ -353,7 +355,7 @@ class WindowToken extends WindowContainer<WindowState> {
+     @Override
+     void removeImmediately() {
+         if (mDisplayContent != null) {
+-            mDisplayContent.removeWindowToken(token);
++            mDisplayContent.removeWindowToken(token, true /* animateExit */);
+         }
+         // Needs to occur after the token is removed from the display above to avoid attempt at
+         // duplicate removal of this window container from it's parent.
+diff --git a/services/tests/wmtests/src/com/android/server/wm/WindowTokenTests.java b/services/tests/wmtests/src/com/android/server/wm/WindowTokenTests.java
+index d048f1842aa3..589f9134f227 100644
+--- a/services/tests/wmtests/src/com/android/server/wm/WindowTokenTests.java
++++ b/services/tests/wmtests/src/com/android/server/wm/WindowTokenTests.java
+@@ -24,6 +24,7 @@ import static android.view.WindowManager.LayoutParams.TYPE_STATUS_BAR;
+ import static android.view.WindowManager.LayoutParams.TYPE_TOAST;
+ 
+ import static com.android.dx.mockito.inline.extended.ExtendedMockito.spyOn;
++import static com.android.server.policy.WindowManagerPolicy.TRANSIT_EXIT;
+ 
+ import static org.junit.Assert.assertEquals;
+ import static org.junit.Assert.assertFalse;
+@@ -44,6 +45,7 @@ import androidx.test.filters.SmallTest;
+ 
+ import org.junit.Test;
+ import org.junit.runner.RunWith;
++import org.mockito.Mockito;
+ 
+ import java.util.function.BiFunction;
+ 
+@@ -126,7 +128,7 @@ public class WindowTokenTests extends WindowTestsBase {
+         final WindowState window1 = createWindow(null, TYPE_TOAST, token, "window1");
+         final WindowState window2 = createWindow(null, TYPE_TOAST, token, "window2");
+ 
+-        mDisplayContent.removeWindowToken(token.token);
++        mDisplayContent.removeWindowToken(token.token, true /* animateExit */);
+         // Verify that the token is no longer mapped on the display
+         assertNull(mDisplayContent.getWindowToken(token.token));
+         // Verify that the token is still attached to its parent
+@@ -261,4 +263,29 @@ public class WindowTokenTests extends WindowTestsBase {
+         assertNotNull(app.getFrozenInsetsState());
+         assertNull(mDisplayContent.mInputMethodWindow.getFrozenInsetsState());
+     }
++
++    @Test
++    public void testRemoveWindowToken_noAnimateExitWhenSet() {
++        final TestWindowToken token = createTestWindowToken(0, mDisplayContent);
++        final WindowState win = createWindow(null, TYPE_APPLICATION, token, "win");
++        makeWindowVisible(win);
++        assertTrue(win.isOnScreen());
++        spyOn(win);
++        spyOn(win.mWinAnimator);
++        spyOn(win.mToken);
++
++        // Invoking removeWindowToken with setting no window exit animation and not remove window
++        // immediately. verify the window will hide without applying exit animation.
++        mWm.removeWindowToken(win.mToken.token, false /* removeWindows */, false /* animateExit */,
++                mDisplayContent.mDisplayId);
++        verify(win).onSetAppExiting(Mockito.eq(false) /* animateExit */);
++        verify(win).hide(false /* doAnimation */, false /* requestAnim */);
++        assertFalse(win.isOnScreen());
++        verify(win.mWinAnimator, Mockito.never()).applyAnimationLocked(TRANSIT_EXIT, false);
++        assertTrue(win.mToken.hasChild());
++
++        // Even though the window is being removed afterwards, it won't apply exit animation.
++        win.removeIfPossible();
++        verify(win.mWinAnimator, Mockito.never()).applyAnimationLocked(TRANSIT_EXIT, false);
++    }
+ }
+-- 
+2.25.1
+
+
+From b351e9c9cc0b8e237958d7dfb8bd8fdcbc72c38a Mon Sep 17 00:00:00 2001
+From: Jing Ji <jji@google.com>
+Date: Tue, 24 Aug 2021 11:42:58 -0700
+Subject: [PATCH 08/11] Use ArrayMap instead of SparseArray to manage the
+ ProviderKey
+
+As the ArrayMap handles the hash code collision properly.
+
+Bug: 197647956
+Test: atest CtsContentTestCases:android.content.cts
+Change-Id: Ibb57a22c08b0fa5462505d586d5fb0aaf908c80f
+(cherry picked from commit 119dd01b497b5e6e25009785ec36c9877675deef)
+---
+ core/java/android/app/ActivityThread.java | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/core/java/android/app/ActivityThread.java b/core/java/android/app/ActivityThread.java
+index dde546b06430..238aa0d55373 100644
+--- a/core/java/android/app/ActivityThread.java
++++ b/core/java/android/app/ActivityThread.java
+@@ -465,11 +465,7 @@ public final class ActivityThread extends ClientTransactionHandler
+ 
+         @Override
+         public int hashCode() {
+-            return hashCode(authority, userId);
+-        }
+-
+-        public static int hashCode(final String auth, final int userIdent) {
+-            return ((auth != null) ? auth.hashCode() : 0) ^ userIdent;
++            return ((authority != null) ? authority.hashCode() : 0) ^ userId;
+         }
+     }
+ 
+@@ -491,7 +487,7 @@ public final class ActivityThread extends ClientTransactionHandler
+     // Note we never removes items from this map but that's okay because there are only so many
+     // users and so many authorities.
+     @GuardedBy("mGetProviderKeys")
+-    final SparseArray<ProviderKey> mGetProviderKeys = new SparseArray<>();
++    final ArrayMap<ProviderKey, ProviderKey> mGetProviderKeys = new ArrayMap<>();
+ 
+     final ArrayMap<Activity, ArrayList<OnActivityPausedListener>> mOnPauseListeners
+         = new ArrayMap<Activity, ArrayList<OnActivityPausedListener>>();
+@@ -7056,11 +7052,11 @@ public final class ActivityThread extends ClientTransactionHandler
+     }
+ 
+     private ProviderKey getGetProviderKey(String auth, int userId) {
+-        final int key = ProviderKey.hashCode(auth, userId);
++        final ProviderKey key = new ProviderKey(auth, userId);
+         synchronized (mGetProviderKeys) {
+             ProviderKey lock = mGetProviderKeys.get(key);
+             if (lock == null) {
+-                lock = new ProviderKey(auth, userId);
++                lock = key;
+                 mGetProviderKeys.put(key, lock);
+             }
+             return lock;
+-- 
+2.25.1
+
+
+From f1353bc84de5a90d07819e85f93633f4269afe28 Mon Sep 17 00:00:00 2001
+From: Ahan Wu <ahanwu@google.com>
+Date: Thu, 2 Sep 2021 19:34:22 -0800
+Subject: [PATCH 09/11] Make sure the removeObservers be called correctly
+
+Handle the surface destroyed case and add a timeout for finish call.
+
+Bug: 196171638
+Bug: 197555842
+Test: adb shell dumpsys SurfaceFlinger
+Test: check the offscreen layers
+Test: see 198714745#comment6
+Change-Id: Ic6d2521d788c50e10b81b556849194a97f240376
+Merged-In: Iec1eb82d1a4756a7b85c8fbdd05f4132a74c613c
+(cherry picked from commit 59e29276f9a7c1f79fda46c60a49589fc0af7ee3)
+---
+ .../android/internal/jank/FrameTracker.java   | 19 ++++++++++++++-----
+ .../internal/jank/InteractionJankMonitor.java |  2 +-
+ 2 files changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/core/java/com/android/internal/jank/FrameTracker.java b/core/java/com/android/internal/jank/FrameTracker.java
+index 8e7fae7aa061..d12c870d2591 100644
+--- a/core/java/com/android/internal/jank/FrameTracker.java
++++ b/core/java/com/android/internal/jank/FrameTracker.java
+@@ -50,6 +50,7 @@ import com.android.internal.util.FrameworkStatsLog;
+ 
+ import java.lang.annotation.Retention;
+ import java.lang.annotation.RetentionPolicy;
++import java.util.concurrent.TimeUnit;
+ 
+ /**
+  * A class that allows the app to get the frame metrics from HardwareRendererObserver.
+@@ -103,6 +104,7 @@ public class FrameTracker extends SurfaceControl.OnJankDataListener
+     private boolean mCancelled = false;
+     private FrameTrackerListener mListener;
+     private boolean mTracingStarted = false;
++    private Runnable mWaitForFinishTimedOut;
+ 
+     private static class JankInfo {
+         long frameVsyncId;
+@@ -263,10 +265,16 @@ public class FrameTracker extends SurfaceControl.OnJankDataListener
+             if (mListener != null) {
+                 mListener.onCujEvents(mSession, ACTION_SESSION_END);
+             }
++            // We don't remove observer here,
++            // will remove it when all the frame metrics in this duration are called back.
++            // See onFrameMetricsAvailable for the logic of removing the observer.
++            // Waiting at most 10 seconds for all callbacks to finish.
++            mWaitForFinishTimedOut = () -> {
++                Log.e(TAG, "force finish cuj because of time out:" + mSession.getName());
++                finish(mJankInfos.size() - 1);
++            };
++            mHandler.postDelayed(mWaitForFinishTimedOut, TimeUnit.SECONDS.toMillis(10));
+         }
+-        // We don't remove observer here,
+-        // will remove it when all the frame metrics in this duration are called back.
+-        // See onFrameMetricsAvailable for the logic of removing the observer.
+     }
+ 
+     /**
+@@ -396,7 +404,8 @@ public class FrameTracker extends SurfaceControl.OnJankDataListener
+     }
+ 
+     private void finish(int indexOnOrAfterEnd) {
+-
++        mHandler.removeCallbacks(mWaitForFinishTimedOut);
++        mWaitForFinishTimedOut = null;
+         mMetricsFinalized = true;
+ 
+         // The tracing has been ended, remove the observer, see if need to trigger perfetto.
+@@ -481,7 +490,7 @@ public class FrameTracker extends SurfaceControl.OnJankDataListener
+             }
+         }
+         if (DEBUG) {
+-            Log.i(TAG, "FrameTracker: CUJ=" + mSession.getName()
++            Log.i(TAG, "finish: CUJ=" + mSession.getName()
+                     + " (" + mBeginVsyncId + "," + mEndVsyncId + ")"
+                     + " totalFrames=" + totalFramesCount
+                     + " missedAppFrames=" + missedAppFramesCount
+diff --git a/core/java/com/android/internal/jank/InteractionJankMonitor.java b/core/java/com/android/internal/jank/InteractionJankMonitor.java
+index aabcd7f82ac7..610cd7339001 100644
+--- a/core/java/com/android/internal/jank/InteractionJankMonitor.java
++++ b/core/java/com/android/internal/jank/InteractionJankMonitor.java
+@@ -103,7 +103,7 @@ public class InteractionJankMonitor {
+     private static final String ACTION_PREFIX = InteractionJankMonitor.class.getCanonicalName();
+ 
+     private static final String DEFAULT_WORKER_NAME = TAG + "-Worker";
+-    private static final long DEFAULT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5L);
++    private static final long DEFAULT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2L);
+     private static final String SETTINGS_ENABLED_KEY = "enabled";
+     private static final String SETTINGS_SAMPLING_INTERVAL_KEY = "sampling_interval";
+     private static final String SETTINGS_THRESHOLD_MISSED_FRAMES_KEY =
+-- 
+2.25.1
+
+
+From 720be2e6ae2a21e8cf1f6301fa19a94c6aa7ae70 Mon Sep 17 00:00:00 2001
+From: Vishnu Nair <vishnun@google.com>
+Date: Mon, 30 Aug 2021 15:01:29 -0700
+Subject: [PATCH 10/11] Surface: Release references to BlastBufferQueue and
+ SurfaceControl on Surface#destroy
+
+SurfaceView clients may hold on to surface references. In S this means
+they would extend the lifetime of the SurfaceControl resulting in
+"leaking" buffers until the references are cleared or the app is
+terminated.
+
+Fix this by calling a new destroy function on Surface which will
+explicitly remove references to the SurfaceControl and BBQ it holds.
+This is safe because SurfaceView controls the lifecycle of the Surface
+and knows when the Surface will become invalid. Once invalid, the Surface
+cannot become valid again.
+
+Test: repro steps in bug
+Bug: 198133921
+Change-Id: I5c7e43736f025fc0965eae2f19719ba40df3cb70
+Merged-In: I5c7e43736f025fc0965eae2f19719ba40df3cb70
+(cherry picked from commit 43b0f37a70b36e0dd3b47352d3b5ecdd594e1551)
+---
+ core/java/android/view/Surface.java     | 4 ++++
+ core/java/android/view/SurfaceView.java | 2 +-
+ core/jni/android_view_Surface.cpp       | 6 ++++++
+ 3 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/core/java/android/view/Surface.java b/core/java/android/view/Surface.java
+index ff2d2eb3d334..fa7330fb84eb 100644
+--- a/core/java/android/view/Surface.java
++++ b/core/java/android/view/Surface.java
+@@ -98,6 +98,7 @@ public class Surface implements Parcelable {
+ 
+     private static native int nativeSetFrameRate(
+             long nativeObject, float frameRate, int compatibility, int changeFrameRateStrategy);
++    private static native void nativeDestroy(long nativeObject);
+ 
+     public static final @android.annotation.NonNull Parcelable.Creator<Surface> CREATOR =
+             new Parcelable.Creator<Surface>() {
+@@ -339,6 +340,9 @@ public class Surface implements Parcelable {
+      */
+     @UnsupportedAppUsage
+     public void destroy() {
++        if (mNativeObject != 0) {
++            nativeDestroy(mNativeObject);
++        }
+         release();
+     }
+ 
+diff --git a/core/java/android/view/SurfaceView.java b/core/java/android/view/SurfaceView.java
+index c415ad452731..af61104774cb 100644
+--- a/core/java/android/view/SurfaceView.java
++++ b/core/java/android/view/SurfaceView.java
+@@ -923,7 +923,7 @@ public class SurfaceView extends View implements ViewRootImpl.SurfaceChangedCall
+         mSurfaceAlpha = 1f;
+ 
+         synchronized (mSurfaceControlLock) {
+-            mSurface.release();
++            mSurface.destroy();
+             if (mBlastBufferQueue != null) {
+                 mBlastBufferQueue.destroy();
+                 mBlastBufferQueue = null;
+diff --git a/core/jni/android_view_Surface.cpp b/core/jni/android_view_Surface.cpp
+index 0957067de603..869b53df2837 100644
+--- a/core/jni/android_view_Surface.cpp
++++ b/core/jni/android_view_Surface.cpp
+@@ -449,6 +449,11 @@ static jint nativeSetFrameRate(JNIEnv* env, jclass clazz, jlong nativeObject, jf
+                         int(changeFrameRateStrategy));
+ }
+ 
++static void nativeDestroy(JNIEnv* env, jclass clazz, jlong nativeObject) {
++    sp<Surface> surface(reinterpret_cast<Surface*>(nativeObject));
++    surface->destroy();
++}
++
+ // ----------------------------------------------------------------------------
+ 
+ static const JNINativeMethod gSurfaceMethods[] = {
+@@ -477,6 +482,7 @@ static const JNINativeMethod gSurfaceMethods[] = {
+         {"nativeSetAutoRefreshEnabled", "(JZ)I", (void*)nativeSetAutoRefreshEnabled},
+         {"nativeSetFrameRate", "(JFII)I", (void*)nativeSetFrameRate},
+         {"nativeGetFromBlastBufferQueue", "(JJ)J", (void*)nativeGetFromBlastBufferQueue},
++        {"nativeDestroy", "(J)V", (void*)nativeDestroy},
+ };
+ 
+ int register_android_view_Surface(JNIEnv* env)
+-- 
+2.25.1
+
+
+From f075679fd3990388807da32c28154358784771c3 Mon Sep 17 00:00:00 2001
+From: SongFerngWang <songferngwang@google.com>
+Date: Thu, 9 Sep 2021 01:29:41 +0800
+Subject: [PATCH 11/11] The telephonyDisplayInfo is wrong after doing
+ compatibility.
+
+If one of the callers is do compatibility, then other caller get wrong
+telephonyDisplayInfo.
+
+Bug: 197521539
+Test: Manually test at local and test the compatibility part and verify
+the 5G+ icon.
+Test: atest com.android.internal.telephony.TelephonyRegistryTest
+
+Change-Id: Ic938f7623c802d04edc67678391cadc80c7dd084
+(cherry picked from commit 5e9cca3afd5f925e84941b7ebdd110ea8141835e)
+---
+ .../core/java/com/android/server/TelephonyRegistry.java    | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/services/core/java/com/android/server/TelephonyRegistry.java b/services/core/java/com/android/server/TelephonyRegistry.java
+index eaec73af2e0e..4e5e458d1636 100644
+--- a/services/core/java/com/android/server/TelephonyRegistry.java
++++ b/services/core/java/com/android/server/TelephonyRegistry.java
+@@ -1889,11 +1889,12 @@ public class TelephonyRegistry extends ITelephonyRegistry.Stub {
+                         try {
+                             if (!mConfigurationProvider.isDisplayInfoNrAdvancedSupported(
+                                     r.callingPackage, Binder.getCallingUserHandle())) {
+-                                telephonyDisplayInfo =
++                                r.callback.onDisplayInfoChanged(
+                                         getBackwardCompatibleTelephonyDisplayInfo(
+-                                                telephonyDisplayInfo);
++                                                telephonyDisplayInfo));
++                            } else {
++                                r.callback.onDisplayInfoChanged(telephonyDisplayInfo);
+                             }
+-                            r.callback.onDisplayInfoChanged(telephonyDisplayInfo);
+                         } catch (RemoteException ex) {
+                             mRemoveList.add(r.binder);
+                         }
+-- 
+2.25.1
+
