@@ -1,0 +1,6 @@
+git filter-branch --force --index-filter \
+"git rm --cached --ignore-unmatch tools/gn2bp/desc_*.json" \
+--prune-empty --tag-name-filter cat -- --all
+
+
+Connectivity Module Push
