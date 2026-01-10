@@ -1,0 +1,18 @@
+============================================
+[100% 79/79] analyzing Android.bp files and generating ninja file at out/soong/build.ninja
+FAILED: out/soong/build.ninja
+cd "$(dirname "out/host/linux-x86/bin/soong_build")" && BUILDER="$PWD/$(basename "out/host/linux-x86/bin/soong_build")" && cd / && env -i  "$BUILDER"     --top "$TOP"     --soong_out "out/soong"     --out "out"     -o out/soong/build.ninja --globListDir build --globFile out/soong/globs-build.ninja -t -l out/.module_paths/Android.bp.list --available_env out/soong/soong.environment.available --used_env out/soong/soong.environment.used.build Android.bp
+error: rust-trials/hello_rust/Android.bp:1:1: module "hello_rust" variant "android_x86_64": violates neverallow requirements. Not allowed:
+        module types: ["rust_benchmark" "rust_benchmark_host" "rust_binary" "rust_binary_host" "rust_library" "rust_library_dylib" "rust_library_rlib" "rust_ffi" "rust_ffi_shared" "rust_ffi_static" "rust_fuzz" "rust_library_host" "rust_library_host_dylib" "rust_library_host_rlib" "rust_ffi_host" "rust_ffi_host_shared" "rust_ffi_host_static" "rust_proc_macro" "rust_test" "rust_test_host"]
+        EXCEPT in dirs: ["device/google/cuttlefish/" "external/adhd/" "external/boringssl/" "external/crosvm/" "external/libchromeos-rs/" "external/minijail/" "external/open-dice/" "external/rust/" "external/selinux/libselinux/" "external/uwb/" "external/vm_tools/p9/" "frameworks/native/libs/binder/rust/" "frameworks/proto_logging/stats/" "hardware/interfaces/security/" "hardware/interfaces/uwb/" "packages/modules/Bluetooth/" "packages/modules/DnsResolver/" "packages/modules/Uwb/" "packages/modules/Virtualization/" "platform_testing/tests/codecoverage/native/rust/" "prebuilts/rust/" "system/core/debuggerd/rust/" "system/core/libstats/pull_rust/" "system/core/trusty/libtrusty-rs/" "system/extras/profcollectd/" "system/extras/simpleperf/" "system/hardware/interfaces/keystore2/" "system/librustutils/" "system/logging/liblog/" "system/logging/rust/" "system/nfc/" "system/security/" "system/tools/aidl/" "tools/security/fuzzing/example_rust_fuzzer/" "tools/security/fuzzing/orphans/" "tools/security/remote_provisioning/cert_validator/" "tools/vendor/" "vendor/"]
+21:09:43 soong bootstrap failed with: exit status 1
+
+Fix:
+
+Not allowed... EXCEPT in dirs: [...]
+
+mkdir -p vendor/my_custom_tests
+mv external/rust-trials/hello_rust vendor/my_custom_tests/
+
+Compiled: Proof
+[100% 258/258] Install out/target/product/emulator_car_x86_64/system/bin/hello_rust
