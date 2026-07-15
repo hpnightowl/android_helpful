@@ -835,3 +835,180 @@ device/qcom/common/power/power.c:517:6: error: field designator 'getFeature' doe
 [122] ninja: error: rebuilding '/home/ubuntu/viper/out/combined-viper_lettuce.ninja':     '/home/ubuntu/viper/out/target/product/lettuce/kernel', needed by 'kernel', missing and no known rule to make it
 
    *compile your kernel first i.e define toolchain path for compiling 
+
+[123] 09:37:48 Build sandboxing disabled due to nsjail error.
+============================================
+PLATFORM_VERSION_CODENAME=Baklava
+PLATFORM_VERSION=Baklava
+TARGET_PRODUCT=sdv_ivi_cf
+TARGET_BUILD_VARIANT=userdebug
+TARGET_ARCH=x86_64
+TARGET_ARCH_VARIANT=silvermont
+HOST_OS=linux
+HOST_OS_EXTRA=Linux-6.14.0-37-generic-x86_64-Ubuntu-24.04.4-LTS
+HOST_CROSS_OS=windows
+BUILD_ID=CP2A.260605.016
+OUT_DIR=out
+SOONG_ONLY=false
+SOONG_INCREMENTAL_ANALYSIS=true
+============================================
+wildcard(out/target/product/sdv_ivi_cf/clean_steps.mk) was changed, regenerating...
+[  0% 72/26362] //trusty/vendor/google/aosp/scripts:trusty_security_vm_x86_64.elf generate
+FAILED: out/soong/.intermediates/trusty/vendor/google/aosp/scripts/trusty_security_vm_x86_64.elf/gen/trusty_security_vm_x86_64.elf
+mkdir -p out/soong/.intermediates/trusty/vendor/google/aosp/scripts/trusty_security_vm_x86_64.elf/nsjail_build_sandbox out/soong/.intermediates/trusty/vendor/google/aosp/scripts/trusty_secur
+ity_vm_x86_64.elf/gen && prebuilts/build-tools/linux-x86/bin/nsjail -B $PWD/out/soong/.intermediates/trusty/vendor/google/aosp/scripts/trusty_security_vm_x86_64.elf/nsjail_build_sandbox:nsja
+il_build_sandbox -B $PWD/out/soong/.intermediates/trusty/vendor/google/aosp/scripts/trusty_security_vm_x86_64.elf/gen:nsjail_build_sandbox/out -R $PWD/external/libcxx/LICENSE.TXT:nsjail_buil
+d_sandbox/external/libcxx/LICENSE.TXT -R $PWD/out/build_date.txt:nsjail_build_sandbox/out/build_date.txt -R $PWD/out/soong/build_number.txt:nsjail_build_sandbox/out/soong/build_number.txt -R
+ $PWD/out/host/linux-x86/bin/dir_to_depfile:nsjail_build_sandbox/tools/out/bin/dir_to_depfile -R $PWD/device/generic/trusty:nsjail_build_sandbox/device/generic/trusty -R $PWD/external/boring
+ssl:nsjail_build_sandbox/external/boringssl -R $PWD/external/dtc:nsjail_build_sandbox/external/dtc -R $PWD/external/freetype:nsjail_build_sandbox/external/freetype -R $PWD/external/googletes
+t:nsjail_build_sandbox/external/googletest -R $PWD/external/libcxx/include:nsjail_build_sandbox/external/libcxx/include -R $PWD/external/libcxx/lib:nsjail_build_sandbox/external/libcxx/lib -
+R $PWD/external/libcxx/src:nsjail_build_sandbox/external/libcxx/src -R $PWD/external/libcxx/utils:nsjail_build_sandbox/external/libcxx/utils -R $PWD/external/libcxxabi:nsjail_build_sandbox/e
+xternal/libcxxabi -R $PWD/external/nanopb-c:nsjail_build_sandbox/external/nanopb-c -R $PWD/external/open-dice:nsjail_build_sandbox/external/open-dice -R $PWD/external/python/fdt:nsjail_build
+_sandbox/external/python/fdt -R $PWD/external/python/jinja:nsjail_build_sandbox/external/python/jinja -R $PWD/external/python/markupsafe:nsjail_build_sandbox/external/python/markupsafe -R $P
+WD/external/python/six:nsjail_build_sandbox/external/python/six -R $PWD/external/rust/android-crates-io/crates/acpi:nsjail_build_sandbox/external/rust/android-crates-io/crates/acpi -R $PWD/e
+xternal/rust/android-crates-io/crates/anyhow:nsjail_build_sandbox/external/rust/android-crates-io/crates/anyhow -R $PWD/external/rust/android-crates-io/crates/arrayvec:nsjail_build_sandbox/e
+xternal/rust/android-crates-io/crates/arrayvec -R $PWD/external/rust/android-crates-io/crates/async-trait:nsjail_build_sandbox/external/rust/android-crates-io/crates/async-trait -R $PWD/exte
+rnal/rust/android-crates-io/crates/bit_field:nsjail_build_sandbox/external/rust/android-crates-io/crates/bit_field -R $PWD/external/rust/android-crates-io/crates/bitflags:nsjail_build_sandbo
+x/external/rust/android-crates-io/crates/bitflags -R $PWD/external/rust/android-crates-io/crates/buddy_system_allocator:nsjail_build_sandbox/external/rust/android-crates-io/crates/buddy_syst
+em_allocator -R $PWD/external/rust/android-crates-io/crates/byteorder:nsjail_build_sandbox/external/rust/android-crates-io/crates/byteorder -R $PWD/external/rust/android-crates-io/crates/cfg
+-if:nsjail_build_sandbox/external/rust/android-crates-io/crates/cfg-if -R $PWD/external/rust/android-crates-io/crates/ciborium:nsjail_build_sandbox/external/rust/android-crates-io/crates/cib
+orium -R $PWD/external/rust/android-crates-io/crates/ciborium-io:nsjail_build_sandbox/external/rust/android-crates-io/crates/ciborium-io -R $PWD/external/rust/android-crates-io/crates/cibori
+um-ll:nsjail_build_sandbox/external/rust/android-crates-io/crates/ciborium-ll -R $PWD/external/rust/android-crates-io/crates/const-oid:nsjail_build_sandbox/external/rust/android-crates-io/cr
+ates/const-oid -R $PWD/external/rust/android-crates-io/crates/coset:nsjail_build_sandbox/external/rust/android-crates-io/crates/coset -R $PWD/external/rust/android-crates-io/crates/der:nsjai
+l_build_sandbox/external/rust/android-crates-io/crates/der -R $PWD/external/rust/android-crates-io/crates/der_derive:nsjail_build_sandbox/external/rust/android-crates-io/crates/der_derive -R
+ $PWD/external/rust/android-crates-io/crates/downcast:nsjail_build_sandbox/external/rust/android-crates-io/crates/downcast -R $PWD/external/rust/android-crates-io/crates/downcast-rs:nsjail_b
+uild_sandbox/external/rust/android-crates-io/crates/downcast-rs -R $PWD/external/rust/android-crates-io/crates/either:nsjail_build_sandbox/external/rust/android-crates-io/crates/either -R $P
+WD/external/rust/android-crates-io/crates/enumn:nsjail_build_sandbox/external/rust/android-crates-io/crates/enumn -R $PWD/external/rust/android-crates-io/crates/flagset:nsjail_build_sandbox/
+external/rust/android-crates-io/crates/flagset -R $PWD/external/rust/android-crates-io/crates/foreign-types:nsjail_build_sandbox/external/rust/android-crates-io/crates/foreign-types -R $PWD/
+external/rust/android-crates-io/crates/foreign-types-shared:nsjail_build_sandbox/external/rust/android-crates-io/crates/foreign-types-shared -R $PWD/external/rust/android-crates-io/crates/fr
+agile:nsjail_build_sandbox/external/rust/android-crates-io/crates/fragile -R $PWD/external/rust/android-crates-io/crates/half:nsjail_build_sandbox/external/rust/android-crates-io/crates/half
+ -R $PWD/external/rust/android-crates-io/crates/hex:nsjail_build_sandbox/external/rust/android-crates-io/crates/hex -R $PWD/external/rust/android-crates-io/crates/itertools:nsjail_build_sand
+box/external/rust/android-crates-io/crates/itertools -R $PWD/external/rust/android-crates-io/crates/lazy_static:nsjail_build_sandbox/external/rust/android-crates-io/crates/lazy_static -R $PW
+D/external/rust/android-crates-io/crates/libc:nsjail_build_sandbox/external/rust/android-crates-io/crates/libc -R $PWD/external/rust/android-crates-io/crates/lock_api:nsjail_build_sandbox/ex
+ternal/rust/android-crates-io/crates/lock_api -R $PWD/external/rust/android-crates-io/crates/log:nsjail_build_sandbox/external/rust/android-crates-io/crates/log -R $PWD/external/rust/android
+-crates-io/crates/mockall:nsjail_build_sandbox/external/rust/android-crates-io/crates/mockall -R $PWD/external/rust/android-crates-io/crates/mockall_derive:nsjail_build_sandbox/external/rust
+/android-crates-io/crates/mockall_derive -R $PWD/external/rust/android-crates-io/crates/num-derive:nsjail_build_sandbox/external/rust/android-crates-io/crates/num-derive -R $PWD/external/rus
+t/android-crates-io/crates/num-integer:nsjail_build_sandbox/external/rust/android-crates-io/crates/num-integer -R $PWD/external/rust/android-crates-io/crates/num-traits:nsjail_build_sandbox/
+external/rust/android-crates-io/crates/num-traits -R $PWD/external/rust/android-crates-io/crates/once_cell:nsjail_build_sandbox/external/rust/android-crates-io/crates/once_cell -R $PWD/exter
+nal/rust/android-crates-io/crates/open-enum:nsjail_build_sandbox/external/rust/android-crates-io/crates/open-enum -R $PWD/external/rust/android-crates-io/crates/open-enum-derive:nsjail_build
+_sandbox/external/rust/android-crates-io/crates/open-enum-derive -R $PWD/external/rust/crates/openssl:nsjail_build_sandbox/external/rust/crates/openssl -R $PWD/external/rust/android-crates-i
+o/crates/openssl-macros:nsjail_build_sandbox/external/rust/android-crates-io/crates/openssl-macros -R $PWD/external/rust/android-crates-io/crates/paste:nsjail_build_sandbox/external/rust/and
+roid-crates-io/crates/paste -R $PWD/external/rust/android-crates-io/crates/pci_types:nsjail_build_sandbox/external/rust/android-crates-io/crates/pci_types -R $PWD/external/rust/android-crate
+s-io/crates/pkcs1:nsjail_build_sandbox/external/rust/android-crates-io/crates/pkcs1 -R $PWD/external/rust/android-crates-io/crates/pkcs8:nsjail_build_sandbox/external/rust/android-crates-io/
+crates/pkcs8 -R $PWD/external/rust/android-crates-io/crates/predicates:nsjail_build_sandbox/external/rust/android-crates-io/crates/predicates -R $PWD/external/rust/android-crates-io/crates/p
+redicates-core:nsjail_build_sandbox/external/rust/android-crates-io/crates/predicates-core -R $PWD/external/rust/android-crates-io/crates/predicates-tree:nsjail_build_sandbox/external/rust/a
+ndroid-crates-io/crates/predicates-tree -R $PWD/external/rust/android-crates-io/crates/proc-macro2:nsjail_build_sandbox/external/rust/android-crates-io/crates/proc-macro2 -R $PWD/external/ru
+st/android-crates-io/extra_versions/crates/protobuf:nsjail_build_sandbox/external/rust/android-crates-io/extra_versions/crates/protobuf -R $PWD/external/rust/android-crates-io/crates/protobu
+f-support:nsjail_build_sandbox/external/rust/android-crates-io/crates/protobuf-support -R $PWD/external/rust/android-crates-io/crates/quote:nsjail_build_sandbox/external/rust/android-crates-
+io/crates/quote -R $PWD/external/rust/android-crates-io/crates/scopeguard:nsjail_build_sandbox/external/rust/android-crates-io/crates/scopeguard -R $PWD/external/rust/android-crates-io/crate
+s/sec1:nsjail_build_sandbox/external/rust/android-crates-io/crates/sec1 -R $PWD/external/rust/android-crates-io/crates/serde:nsjail_build_sandbox/external/rust/android-crates-io/crates/serde
+ -R $PWD/external/rust/android-crates-io/crates/serde_core:nsjail_build_sandbox/external/rust/android-crates-io/crates/serde_core -R $PWD/external/rust/android-crates-io/crates/serde_derive:
+nsjail_build_sandbox/external/rust/android-crates-io/crates/serde_derive -R $PWD/external/rust/android-crates-io/crates/smccc:nsjail_build_sandbox/external/rust/android-crates-io/crates/smcc
+c -R $PWD/external/rust/android-crates-io/crates/spin:nsjail_build_sandbox/external/rust/android-crates-io/crates/spin -R $PWD/external/rust/android-crates-io/crates/spki:nsjail_build_sandbo
+x/external/rust/android-crates-io/crates/spki -R $PWD/external/rust/android-crates-io/crates/static_assertions:nsjail_build_sandbox/external/rust/android-crates-io/crates/static_assertions -
+R $PWD/external/rust/android-crates-io/crates/syn:nsjail_build_sandbox/external/rust/android-crates-io/crates/syn -R $PWD/external/rust/android-crates-io/crates/synstructure:nsjail_build_san
+dbox/external/rust/android-crates-io/crates/synstructure -R $PWD/external/rust/android-crates-io/crates/termcolor:nsjail_build_sandbox/external/rust/android-crates-io/crates/termcolor -R $PW
+D/external/rust/android-crates-io/crates/termtree:nsjail_build_sandbox/external/rust/android-crates-io/crates/termtree -R $PWD/external/rust/android-crates-io/crates/thiserror:nsjail_build_s
+andbox/external/rust/android-crates-io/crates/thiserror -R $PWD/external/rust/android-crates-io/crates/thiserror-impl:nsjail_build_sandbox/external/rust/android-crates-io/crates/thiserror-im
+pl -R $PWD/external/rust/android-crates-io/crates/unicode-ident:nsjail_build_sandbox/external/rust/android-crates-io/crates/unicode-ident -R $PWD/external/rust/android-crates-io/crates/unico
+de-xid:nsjail_build_sandbox/external/rust/android-crates-io/crates/unicode-xid -R $PWD/external/rust/android-crates-io/crates/uuid:nsjail_build_sandbox/external/rust/android-crates-io/crates
+/uuid -R $PWD/external/rust/android-crates-io/crates/virtio-drivers-and-devices:nsjail_build_sandbox/external/rust/android-crates-io/crates/virtio-drivers-and-devices -R $PWD/external/rust/a
+ndroid-crates-io/extra_versions/crates/vm-memory:nsjail_build_sandbox/external/rust/android-crates-io/extra_versions/crates/vm-memory -R $PWD/external/rust/android-crates-io/crates/x509-cert
+:nsjail_build_sandbox/external/rust/android-crates-io/crates/x509-cert -R $PWD/external/rust/android-crates-io/crates/zerocopy:nsjail_build_sandbox/external/rust/android-crates-io/crates/zer
+ocopy -R $PWD/external/rust/android-crates-io/crates/zerocopy-derive:nsjail_build_sandbox/external/rust/android-crates-io/crates/zerocopy-derive -R $PWD/external/rust/android-crates-io/crate
+s/zeroize:nsjail_build_sandbox/external/rust/android-crates-io/crates/zeroize -R $PWD/external/rust/android-crates-io/crates/zeroize_derive:nsjail_build_sandbox/external/rust/android-crates-
+io/crates/zeroize_derive -R $PWD/external/scudo:nsjail_build_sandbox/external/scudo -R $PWD/external/trusty/arm-trusted-firmware:nsjail_build_sandbox/external/trusty/arm-trusted-firmware -R 
+$PWD/external/trusty/bootloader:nsjail_build_sandbox/external/trusty/bootloader -R $PWD/external/trusty/headers:nsjail_build_sandbox/external/trusty/headers -R $PWD/external/trusty/lk:nsjail
+_build_sandbox/external/trusty/lk -R $PWD/external/trusty/musl:nsjail_build_sandbox/external/trusty/musl -R $PWD/frameworks/hardware/interfaces:nsjail_build_sandbox/frameworks/hardware/inter
+faces -R $PWD/frameworks/native/libs/binder:nsjail_build_sandbox/frameworks/native/libs/binder -R $PWD/hardware/interfaces/gatekeeper/aidl:nsjail_build_sandbox/hardware/interfaces/gatekeeper
+/aidl -R $PWD/hardware/interfaces/security/keymint/aidl:nsjail_build_sandbox/hardware/interfaces/security/keymint/aidl -R $PWD/hardware/interfaces/security/secureclock/aidl:nsjail_build_sand
+box/hardware/interfaces/security/secureclock/aidl -R $PWD/hardware/interfaces/security/see:nsjail_build_sandbox/hardware/interfaces/security/see -R $PWD/hardware/interfaces/security/sharedse
+cret/aidl:nsjail_build_sandbox/hardware/interfaces/security/sharedsecret/aidl -R $PWD/hardware/interfaces/staging/security/see:nsjail_build_sandbox/hardware/interfaces/staging/security/see -
+R $PWD/hardware/libhardware:nsjail_build_sandbox/hardware/libhardware -R $PWD/packages/modules/Virtualization/libs:nsjail_build_sandbox/packages/modules/Virtualization/libs -R $PWD/prebuilts
+/build-tools:nsjail_build_sandbox/prebuilts/build-tools -R $PWD/prebuilts/clang-tools:nsjail_build_sandbox/prebuilts/clang-tools -R $PWD/prebuilts/clang/host/linux-x86/clang-r547379:nsjail_b
+uild_sandbox/prebuilts/clang/host/linux-x86/clang-r547379 -R $PWD/prebuilts/clang/host/linux-x86/clang-r563880c:nsjail_build_sandbox/prebuilts/clang/host/linux-x86/clang-r563880c -R $PWD/pre
+builts/clang/host/linux-x86/clang-r584948b:nsjail_build_sandbox/prebuilts/clang/host/linux-x86/clang-r584948b -R $PWD/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8:nsjail_build_san
+dbox/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8 -R $PWD/prebuilts/misc:nsjail_build_sandbox/prebuilts/misc -R $PWD/prebuilts/rust-toolchain/linux-x86:nsjail_build_sandbox/prebui
+lts/rust-toolchain/linux-x86 -R $PWD/system/authgraph:nsjail_build_sandbox/system/authgraph -R $PWD/system/core:nsjail_build_sandbox/system/core -R $PWD/system/gatekeeper:nsjail_build_sandbo
+x/system/gatekeeper -R $PWD/system/keymaster:nsjail_build_sandbox/system/keymaster -R $PWD/system/keymint:nsjail_build_sandbox/system/keymint -R $PWD/system/libbase:nsjail_build_sandbox/syst
+em/libbase -R $PWD/system/libcppbor:nsjail_build_sandbox/system/libcppbor -R $PWD/system/secretkeeper:nsjail_build_sandbox/system/secretkeeper -R $PWD/system/security:nsjail_build_sandbox/sy
+stem/security -R $PWD/system/see/authmgr:nsjail_build_sandbox/system/see/authmgr -R $PWD/system/teeui:nsjail_build_sandbox/system/teeui -R $PWD/system/tools/aidl:nsjail_build_sandbox/system/
+tools/aidl -R $PWD/test/vts-testcase/hal/treble/vintf/aidl:nsjail_build_sandbox/test/vts-testcase/hal/treble/vintf/aidl -R $PWD/trusty/device/arm/generic-arm64:nsjail_build_sandbox/trusty/de
+vice/arm/generic-arm64 -R $PWD/trusty/device/common:nsjail_build_sandbox/trusty/device/common -R $PWD/trusty/device/desktop:nsjail_build_sandbox/trusty/device/desktop -R $PWD/trusty/device/x
+86/generic-x86_64:nsjail_build_sandbox/trusty/device/x86/generic-x86_64 -R $PWD/trusty/kernel:nsjail_build_sandbox/trusty/kernel -R $PWD/trusty/user/app/authmgr:nsjail_build_sandbox/trusty/u
+ser/app/authmgr -R $PWD/trusty/user/app/avb:nsjail_build_sandbox/trusty/user/app/avb -R $PWD/trusty/user/app/cast-auth:nsjail_build_sandbox/trusty/user/app/cast-auth -R $PWD/trusty/user/app/
+confirmationui:nsjail_build_sandbox/trusty/user/app/confirmationui -R $PWD/trusty/user/app/gatekeeper:nsjail_build_sandbox/trusty/user/app/gatekeeper -R $PWD/trusty/user/app/keymaster:nsjail
+_build_sandbox/trusty/user/app/keymaster -R $PWD/trusty/user/app/keymint:nsjail_build_sandbox/trusty/user/app/keymint -R $PWD/trusty/user/app/sample:nsjail_build_sandbox/trusty/user/app/samp
+le -R $PWD/trusty/user/app/secretkeeper:nsjail_build_sandbox/trusty/user/app/secretkeeper -R $PWD/trusty/user/app/storage:nsjail_build_sandbox/trusty/user/app/storage -R $PWD/trusty/user/bas
+e:nsjail_build_sandbox/trusty/user/base -R $PWD/trusty/user/desktop:nsjail_build_sandbox/trusty/user/desktop -R $PWD/trusty/vendor/google/aosp:nsjail_build_sandbox/trusty/vendor/google/aosp 
+-R $PWD/out/soong/.intermediates/system/tools/aidl/aidl/linux_glibc_x86_64/aidl:nsjail_build_sandbox/tools/out/bin/aidl -R $PWD/out/soong/.intermediates/prebuilts/clang/host/linux-x86/libc++
+/linux_glibc_x86_64_shared/libc++.so:nsjail_build_sandbox/tools/out/lib64/libc++.so -R $PWD/out/soong/.intermediates/system/tools/aidl/build/aidl_rust_glue/linux_glibc_x86_64/aidl_rust_glue:
+nsjail_build_sandbox/tools/out/bin/aidl_rust_glue -R $PWD/out/soong/.intermediates/external/sqlite/dist/libsqlite/linux_glibc_x86_64_shared/libsqlite.so:nsjail_build_sandbox/tools/out/lib64/
+libsqlite.so -R $PWD/out/soong/.intermediates/external/icu/icu4c/source/i18n/libicui18n/linux_glibc_x86_64_shared/libicui18n-host.so:nsjail_build_sandbox/tools/out/lib64/libicui18n-host.so -
+R $PWD/out/soong/.intermediates/external/icu/icu4c/source/common/libicuuc/linux_glibc_x86_64_shared/libicuuc-host.so:nsjail_build_sandbox/tools/out/lib64/libicuuc-host.so -R $PWD/out/soong/.
+intermediates/external/icu/icu4c/source/stubdata/icu-data_host_i18n_apex/linux_glibc_common/icudt78l.dat:nsjail_build_sandbox/tools/out/com.android.i18n/etc/icu/icudt78l.dat -R $PWD/out/soon
+g/.intermediates/prebuilts/clang/host/linux-x86/libc++/linux_glibc_x86_64_shared/libc++.so:nsjail_build_sandbox/tools/out/lib64/libc++.so -R $PWD/out/soong/.intermediates/external/protobuf/a
+protoc/linux_glibc_x86_64/aprotoc:nsjail_build_sandbox/tools/out/bin/aprotoc -R $PWD/out/soong/.intermediates/trusty/vendor/google/aosp/scripts/build_trusty/linux_glibc_x86_64/build_trusty:n
+sjail_build_sandbox/tools/out/bin/build_trusty -R $PWD/out/soong/.intermediates/external/sqlite/dist/libsqlite/linux_glibc_x86_64_shared/libsqlite.so:nsjail_build_sandbox/tools/out/lib64/lib
+sqlite.so -R $PWD/out/soong/.intermediates/external/icu/icu4c/source/i18n/libicui18n/linux_glibc_x86_64_shared/libicui18n-host.so:nsjail_build_sandbox/tools/out/lib64/libicui18n-host.so -R $
+PWD/out/soong/.intermediates/external/icu/icu4c/source/common/libicuuc/linux_glibc_x86_64_shared/libicuuc-host.so:nsjail_build_sandbox/tools/out/lib64/libicuuc-host.so -R $PWD/out/soong/.int
+ermediates/external/icu/icu4c/source/stubdata/icu-data_host_i18n_apex/linux_glibc_common/icudt78l.dat:nsjail_build_sandbox/tools/out/com.android.i18n/etc/icu/icudt78l.dat -R $PWD/out/soong/.
+intermediates/prebuilts/clang/host/linux-x86/libc++/linux_glibc_x86_64_shared/libc++.so:nsjail_build_sandbox/tools/out/lib64/libc++.so -R $PWD/out/soong/.intermediates/trusty/host/common/scr
+ipts/metrics_atoms_protoc_plugin/trusty_metrics_atoms_protoc_plugin/linux_glibc_x86_64/trusty_metrics_atoms_protoc_plugin:nsjail_build_sandbox/tools/out/bin/trusty_metrics_atoms_protoc_plugi
+n -R $PWD/out/soong/.intermediates/external/sqlite/dist/libsqlite/linux_glibc_x86_64_shared/libsqlite.so:nsjail_build_sandbox/tools/out/lib64/libsqlite.so -R $PWD/out/soong/.intermediates/ex
+ternal/icu/icu4c/source/i18n/libicui18n/linux_glibc_x86_64_shared/libicui18n-host.so:nsjail_build_sandbox/tools/out/lib64/libicui18n-host.so -R $PWD/out/soong/.intermediates/external/icu/icu
+4c/source/common/libicuuc/linux_glibc_x86_64_shared/libicuuc-host.so:nsjail_build_sandbox/tools/out/lib64/libicuuc-host.so -R $PWD/out/soong/.intermediates/external/icu/icu4c/source/stubdata
+/icu-data_host_i18n_apex/linux_glibc_common/icudt78l.dat:nsjail_build_sandbox/tools/out/com.android.i18n/etc/icu/icudt78l.dat -R $PWD/out/soong/.intermediates/prebuilts/clang/host/linux-x86/
+libc++/linux_glibc_x86_64_shared/libc++.so:nsjail_build_sandbox/tools/out/lib64/libc++.so -R /bin -R /lib -R /lib64 -R /dev -R /usr -R /etc -m none:/tmp:tmpfs:size=1073741824 -D nsjail_build
+_sandbox --disable_rlimits --skip_setsid -q -- /bin/bash -c 'PROJECT_NAME=vm-x86_64-security-placeholder-trusted-hal-userdebug; OUT_EXT=elf;(mkdir -p out/build-root && cp -t . external/trust
+y/lk/makefile trusty/vendor/google/aosp/lk_inc.mk && AIDL_TOOL=tools/out/bin/aidl AIDL_RUST_GLUE_TOOL=tools/out/bin/aidl_rust_glue PROTOC_TOOL=tools/out/bin/aprotoc PROTOC_PLUGIN_BINARY=tool
+s/out/bin/trusty_metrics_atoms_protoc_plugin TRUSTY_SKIP_DOCS=true BUILDDATE="$(date --date=@$(cat out/build_date.txt))" DESKTOP_TRUSTY_BUILD_PARAMS_RS="$DESKTOP_TRUSTY_BUILD_PARAMS_RS" MICR
+ODROID_KERNEL_HASHES_RS="$MICRODROID_KERNEL_HASHES_RS" PLATFORM_SECURITY_PATCH_TIMESTAMP_RS="$PLATFORM_SECURITY_PATCH_TIMESTAMP_RS" tools/out/bin/build_trusty --script-dir trusty/vendor/goog
+le/aosp/scripts --buildid "$(cat out/soong/build_number.txt)" --verbose $PROJECT_NAME --build-root out/build-root 1>out/stdout.log 2>out/stderr.log || (echo Trusty build FAILED; echo stdout:
+; cat out/stdout.log; echo stderr:; cat out/stderr.log; false)) && cp -f out/build-root/build-$PROJECT_NAME/lk.$OUT_EXT out/trusty_security_vm_x86_64.elf && tools/out/bin/dir_to_depfile -o o
+ut/dir_deps.d -t out/soong/.intermediates/trusty/vendor/google/aosp/scripts/trusty_security_vm_x86_64.elf/gen/trusty_security_vm_x86_64.elf device/generic/trusty external/boringssl external/
+dtc external/freetype external/googletest external/libcxx/include external/libcxx/lib external/libcxx/src external/libcxx/utils external/libcxxabi external/nanopb-c external/open-dice extern
+al/python/fdt external/python/jinja external/python/markupsafe external/python/six external/rust/android-crates-io/crates/acpi external/rust/android-crates-io/crates/anyhow external/rust/and
+roid-crates-io/crates/arrayvec external/rust/android-crates-io/crates/async-trait external/rust/android-crates-io/crates/bit_field external/rust/android-crates-io/crates/bitflags external/ru
+st/android-crates-io/crates/buddy_system_allocator external/rust/android-crates-io/crates/byteorder external/rust/android-crates-io/crates/cfg-if external/rust/android-crates-io/crates/cibor
+ium external/rust/android-crates-io/crates/ciborium-io external/rust/android-crates-io/crates/ciborium-ll external/rust/android-crates-io/crates/const-oid external/rust/android-crates-io/cra
+tes/coset external/rust/android-crates-io/crates/der external/rust/android-crates-io/crates/der_derive external/rust/android-crates-io/crates/downcast external/rust/android-crates-io/crates/
+downcast-rs external/rust/android-crates-io/crates/either external/rust/android-crates-io/crates/enumn external/rust/android-crates-io/crates/flagset external/rust/android-crates-io/crates/f
+oreign-types external/rust/android-crates-io/crates/foreign-types-shared external/rust/android-crates-io/crates/fragile external/rust/android-crates-io/crates/half external/rust/android-crat
+es-io/crates/hex external/rust/android-crates-io/crates/itertools external/rust/android-crates-io/crates/lazy_static external/rust/android-crates-io/crates/libc external/rust/android-crates-
+io/crates/lock_api external/rust/android-crates-io/crates/log external/rust/android-crates-io/crates/mockall external/rust/android-crates-io/crates/mockall_derive external/rust/android-crate
+s-io/crates/num-derive external/rust/android-crates-io/crates/num-integer external/rust/android-crates-io/crates/num-traits external/rust/android-crates-io/crates/once_cell external/rust/and
+roid-crates-io/crates/open-enum external/rust/android-crates-io/crates/open-enum-derive external/rust/android-crates-io/crates/openssl-macros external/rust/android-crates-io/crates/paste ext
+ernal/rust/android-crates-io/crates/pci_types external/rust/android-crates-io/crates/pkcs1 external/rust/android-crates-io/crates/pkcs8 external/rust/android-crates-io/crates/predicates exte
+rnal/rust/android-crates-io/crates/predicates-core external/rust/android-crates-io/crates/predicates-tree external/rust/android-crates-io/crates/proc-macro2 external/rust/android-crates-io/c
+rates/protobuf-support external/rust/android-crates-io/crates/quote external/rust/android-crates-io/crates/scopeguard external/rust/android-crates-io/crates/sec1 external/rust/android-crates
+-io/crates/serde external/rust/android-crates-io/crates/serde_core external/rust/android-crates-io/crates/serde_derive external/rust/android-crates-io/crates/smccc external/rust/android-crat
+es-io/crates/spin external/rust/android-crates-io/crates/spki external/rust/android-crates-io/crates/static_assertions external/rust/android-crates-io/crates/syn external/rust/android-crates
+-io/crates/synstructure external/rust/android-crates-io/crates/termcolor external/rust/android-crates-io/crates/termtree external/rust/android-crates-io/crates/thiserror external/rust/androi
+d-crates-io/crates/thiserror-impl external/rust/android-crates-io/crates/unicode-ident external/rust/android-crates-io/crates/unicode-xid external/rust/android-crates-io/crates/uuid external
+/rust/android-crates-io/crates/virtio-drivers-and-devices external/rust/android-crates-io/crates/x509-cert external/rust/android-crates-io/crates/zerocopy external/rust/android-crates-io/cra
+tes/zerocopy-derive external/rust/android-crates-io/crates/zeroize external/rust/android-crates-io/crates/zeroize_derive external/rust/android-crates-io/extra_versions/crates/protobuf extern
+al/rust/android-crates-io/extra_versions/crates/vm-memory external/rust/crates/openssl external/scudo external/trusty/arm-trusted-firmware external/trusty/bootloader external/trusty/headers 
+external/trusty/lk external/trusty/musl frameworks/hardware/interfaces frameworks/native/libs/binder hardware/interfaces/gatekeeper/aidl hardware/interfaces/security/keymint/aidl hardware/in
+terfaces/security/secureclock/aidl hardware/interfaces/security/see hardware/interfaces/security/sharedsecret/aidl hardware/interfaces/staging/security/see hardware/libhardware packages/modu
+les/Virtualization/libs prebuilts/build-tools prebuilts/clang-tools prebuilts/clang/host/linux-x86/clang-r547379 prebuilts/clang/host/linux-x86/clang-r563880c prebuilts/clang/host/linux-x86/
+clang-r584948b prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8 prebuilts/misc prebuilts/rust-toolchain/linux-x86 system/authgraph system/core system/gatekeeper system/keymaster syste
+m/keymint system/libbase system/libcppbor system/secretkeeper system/security system/see/authmgr system/teeui system/tools/aidl test/vts-testcase/hal/treble/vintf/aidl trusty/device/arm/gene
+ric-arm64 trusty/device/common trusty/device/desktop trusty/device/x86/generic-x86_64 trusty/kernel trusty/user/app/authmgr trusty/user/app/avb trusty/user/app/cast-auth trusty/user/app/conf
+irmationui trusty/user/app/gatekeeper trusty/user/app/keymaster trusty/user/app/keymint trusty/user/app/sample trusty/user/app/secretkeeper trusty/user/app/storage trusty/user/base trusty/us
+er/desktop trusty/vendor/google/aosp # hash of input list: 6c89141a7bcfddef1264dcddf275d9c3c761b2e9b02f30607b879eb00d25be2a'
+stderr:
+[E][2026-07-15T09:38:12+0530][1] initCloneNs():391 mount('/', '/', NULL, MS_REC|MS_PRIVATE, NULL): Permission denied
+[F][2026-07-15T09:38:12+0530][1] runChild():485 Launching child process failed
+[W][2026-07-15T09:38:12+0530][1813603] runChild():505 Received error message from the child process before it has been executed
+[E][2026-07-15T09:38:12+0530][1813603] standaloneMode():275 Couldn't launch the child process
+FAILED: ninja: 
+1m11.59s Build Failure: 80 done, 1 failed, 26281 remaining - 1.12/s
+ 1 steps failed: exit=255 # signal:signal 127
+warning: ninja: see ./out/siso_output for full command line and output
+ or ./out/siso.INFO
+use ./out/siso_failed_commands.sh to re-run failed commands
+09:39:05 ninja failed with: exit status 1
+
+#### failed to build some targets (01:18 (mm:ss)) ####
+
