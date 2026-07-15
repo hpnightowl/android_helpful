@@ -1012,3 +1012,10 @@ use ./out/siso_failed_commands.sh to re-run failed commands
 
 #### failed to build some targets (01:18 (mm:ss)) ####
 
+Solution:
+
+Temp since you are building in sandbox container.
+
+sudo sysctl kernel.apparmor_restrict_unprivileged_userns=0
+echo 'kernel.apparmor_restrict_unprivileged_userns=0' | sudo tee -a /etc/sysctl.conf
+sudo sysctl --system
